@@ -1,0 +1,1013 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    overflow: hidden;
+}
+
+.header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px;
+    text-align: center;
+}
+
+.header h1 {
+    font-size: 2em;
+    margin-bottom: 10px;
+}
+
+.header p {
+    opacity: 0.9;
+    font-size: 1.1em;
+}
+
+.content {
+    padding: 30px;
+}
+
+.input-section {
+    margin-bottom: 30px;
+}
+
+.input-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+input[type="text"] {
+    flex: 1;
+    padding: 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+}
+
+input[type="text"]:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+button {
+    padding: 15px 30px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+button:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.video-section {
+    display: none;
+    margin-bottom: 30px;
+}
+
+.video-section.active {
+    display: block;
+}
+
+.video-wrapper {
+    position: relative;
+    padding-bottom: 56.25%;
+    height: 0;
+    overflow: hidden;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.video-wrapper iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.controls {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.editing-mode-indicator {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    text-align: center;
+    margin-bottom: 15px;
+    font-weight: 500;
+    font-size: 14px;
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.time-display {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    font-size: 14px;
+    color: #666;
+}
+
+.time-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.time-label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.time-value {
+    background: white;
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-family: monospace;
+    font-size: 16px;
+    color: #667eea;
+}
+
+.range-container {
+    position: relative;
+    height: 60px;
+    margin-bottom: 20px;
+}
+
+.range-track {
+    position: absolute;
+    top: 25px;
+    left: 0;
+    right: 0;
+    height: 10px;
+    background: #e0e0e0;
+    border-radius: 5px;
+}
+
+.range-selection {
+    position: absolute;
+    top: 25px;
+    height: 10px;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    border-radius: 5px;
+    transition: all 0.1s;
+}
+
+input[type="range"] {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 60px;
+    -webkit-appearance: none;
+    background: transparent;
+    pointer-events: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid #667eea;
+    cursor: pointer;
+    pointer-events: auto;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid #667eea;
+    cursor: pointer;
+    pointer-events: auto;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+#startRange {
+    z-index: 2;
+}
+
+#endRange {
+    z-index: 1;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.action-buttons button {
+    flex: 1;
+}
+
+.btn-preview {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.btn-save {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.btn-new {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.playlist-section {
+    margin-top: 40px;
+}
+
+.playlists-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 3px solid #333;
+}
+
+.playlists-header h2 {
+    color: #333;
+    font-size: 1.5em;
+    font-weight: bold;
+    margin: 0;
+}
+
+.btn-add-playlist {
+    width: 50px;
+    height: 50px;
+    background: #333;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 32px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s, background 0.2s;
+    padding: 0;
+    line-height: 1;
+}
+
+.btn-add-playlist:hover {
+    transform: scale(1.05);
+    background: #555;
+}
+
+.playlists-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.playlist-item {
+    border: 3px solid #333;
+    border-radius: 8px;
+    background: white;
+    overflow: hidden;
+}
+
+.playlist-item.playing {
+    border-color: #667eea;
+    box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+}
+
+.playlist-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: white;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.playlist-header-row:hover {
+    background: #f8f9fa;
+}
+
+.playlist-name-label {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    flex: 1;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    user-select: none;
+}
+
+.playlist-name-label:hover {
+    background: #f0f0f0;
+    color: #667eea;
+}
+
+.playlist-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.btn-play-playlist {
+    width: 40px;
+    height: 40px;
+    background: #333;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.btn-play-playlist:hover {
+    background: #555;
+}
+
+.btn-delete-playlist {
+    width: 40px;
+    height: 40px;
+    background: white;
+    color: #333;
+    border: 2px solid #333;
+    border-radius: 5px;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.btn-delete-playlist:hover {
+    background: #ff4444;
+    color: white;
+    border-color: #ff4444;
+}
+
+.playlist-clips {
+    display: none;
+    background: #f8f9fa;
+    border-top: 2px solid #ddd;
+    padding: 10px;
+}
+
+.playlist-clips.expanded {
+    display: block;
+}
+
+.clip-item-mini {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: white;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    margin-bottom: 8px;
+    cursor: move;
+    transition: all 0.2s ease;
+    gap: 10px;
+}
+
+.clip-item-mini:last-child {
+    margin-bottom: 0;
+}
+
+.clip-item-mini:hover {
+    border-color: #999;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.clip-item-mini.dragging {
+    opacity: 0.5;
+    transform: scale(0.95);
+    border-color: #667eea;
+}
+
+.clip-item-mini.drag-over {
+    border-color: #667eea;
+    border-style: dashed;
+    background: #f0f4ff;
+    transform: scale(1.02);
+}
+
+.drag-handle {
+    color: #999;
+    font-size: 18px;
+    cursor: grab;
+    user-select: none;
+    padding: 0 5px;
+    line-height: 1;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+.clip-item-mini:hover .drag-handle {
+    color: #667eea;
+}
+
+.clip-name {
+    font-weight: bold;
+    color: #333;
+    cursor: pointer;
+    padding: 5px 8px;
+    border-radius: 5px;
+    transition: background 0.2s, color 0.2s;
+    user-select: none;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.clip-name:hover {
+    background: #f0f0f0;
+    color: #667eea;
+}
+
+.clip-actions-mini {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-play-clip,
+.btn-delete-clip {
+    width: 35px;
+    height: 35px;
+    background: #333;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.btn-play-clip:hover {
+    background: #555;
+}
+
+.btn-delete-clip {
+    background: white;
+    color: #333;
+    border: 2px solid #333;
+}
+
+.btn-delete-clip:hover {
+    background: #ff4444;
+    color: white;
+    border-color: #ff4444;
+}
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal.show {
+    display: flex;
+}
+
+#createPlaylistModal {
+    z-index: 2100;
+}
+
+#createPlaylistModal.show {
+    background: rgba(0, 0, 0, 0.85);
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 25px;
+    border-bottom: 2px solid #eee;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.3em;
+    color: #333;
+}
+
+.modal-close {
+    width: 35px;
+    height: 35px;
+    background: transparent;
+    border: none;
+    font-size: 28px;
+    color: #666;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 5px;
+    transition: background 0.2s;
+    padding: 0;
+    line-height: 1;
+}
+
+.modal-close:hover {
+    background: #f0f0f0;
+    color: #333;
+}
+
+.modal-body {
+    padding: 25px;
+}
+
+.modal-body input[type="text"],
+.playlist-select {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    margin-bottom: 15px;
+}
+
+.modal-body input[type="text"]:focus,
+.playlist-select:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.playlist-select {
+    background: white;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    padding-right: 40px;
+}
+
+.modal-divider {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 2px solid #eee;
+    text-align: center;
+}
+
+.btn-create-new-playlist {
+    width: 100%;
+    padding: 15px;
+    background: #333;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: background 0.2s;
+}
+
+.btn-create-new-playlist:hover {
+    background: #555;
+}
+
+.plus-icon {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.modal-info {
+    margin-top: 10px;
+    font-size: 13px;
+    color: #666;
+}
+
+.modal-footer {
+    padding: 20px 25px;
+    border-top: 2px solid #eee;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.btn-modal-cancel,
+.btn-modal-create,
+.btn-modal-save {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-modal-cancel {
+    background: #f0f0f0;
+    color: #333;
+}
+
+.btn-modal-cancel:hover {
+    background: #e0e0e0;
+}
+
+.btn-modal-create,
+.btn-modal-save {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-modal-create:hover,
+.btn-modal-save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.playback-controls {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(100px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.playback-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.playback-playlist-name {
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.playback-status {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.btn-stop-playback {
+    background: white;
+    color: #eb3349;
+    padding: 10px 20px;
+    font-size: 14px;
+    white-space: nowrap;
+    font-weight: bold;
+}
+
+.clip-count {
+    background: #667eea;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-weight: bold;
+}
+
+.btn-play-all {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    padding: 10px 20px;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.btn-loop {
+    background: linear-gradient(135deg, #ffa751 0%, #ffe259 100%);
+    padding: 10px 20px;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.btn-stop-all {
+    background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+    padding: 10px 20px;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.loop-indicator {
+    background: linear-gradient(135deg, #ffa751 0%, #ffe259 100%);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-weight: bold;
+    font-size: 14px;
+    animation: pulse-loop 2s infinite;
+}
+
+@keyframes pulse-loop {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.playlist {
+    display: grid;
+    gap: 15px;
+}
+
+.clip-item {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 15px;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.clip-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.clip-item.playing {
+    background: linear-gradient(135deg, #e0f7fa 0%, #e1bee7 100%);
+    border: 2px solid #667eea;
+    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+}
+
+.clip-number {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+
+.clip-item.playing .clip-number {
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+.clip-info {
+    flex: 1;
+}
+
+.clip-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.clip-time {
+    color: #666;
+    font-size: 14px;
+    font-family: monospace;
+}
+
+.clip-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-play {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    padding: 10px 20px;
+    font-size: 14px;
+}
+
+.btn-delete {
+    background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+    padding: 10px 20px;
+    font-size: 14px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #999;
+}
+
+.empty-state svg {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 20px;
+    opacity: 0.3;
+}
+
+.alert {
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    display: none;
+}
+
+.alert.show {
+    display: block;
+}
+
+.alert-error {
+    background: #fee;
+    color: #c33;
+    border: 1px solid #fcc;
+}
+
+.alert-success {
+    background: #efe;
+    color: #3c3;
+    border: 1px solid #cfc;
+}
+
+@media (max-width: 768px) {
+    .content {
+        padding: 20px;
+    }
+
+    .input-group {
+        flex-direction: column;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+
+    .playlists-header {
+        flex-wrap: wrap;
+    }
+
+    .playlist-header-row {
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+    }
+
+    .playlist-actions {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .clip-item-mini {
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+    }
+    
+    .drag-handle {
+        display: none;
+    }
+
+    .clip-actions-mini {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .playback-controls {
+        bottom: 10px;
+        right: 10px;
+        left: 10px;
+        flex-direction: column;
+        padding: 15px;
+    }
+
+    .playback-info {
+        width: 100%;
+        text-align: center;
+    }
+
+    .btn-stop-playback {
+        width: 100%;
+    }
+
+    .modal-content {
+        width: 95%;
+        margin: 10px;
+    }
+
+    .modal-footer {
+        flex-direction: column;
+    }
+
+    .btn-modal-cancel,
+    .btn-modal-create,
+    .btn-modal-save {
+        width: 100%;
+    }
+}

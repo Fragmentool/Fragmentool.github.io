@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creador de Playlist de Fragmentos de YouTube</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 Creador de Playlist de Fragmentos</h1>
+            <p>Crea tu lista de reproducción personalizada con fragmentos específicos de videos de YouTube</p>
+        </div>
+
+        <div class="content">
+            <div class="alert alert-error" id="errorAlert"></div>
+            <div class="alert alert-success" id="successAlert"></div>
+
+            <div class="input-section">
+                <div class="input-group">
+                    <input 
+                        type="text" 
+                        id="videoUrl" 
+                        placeholder="Pega aquí la URL del video de YouTube (ej: https://www.youtube.com/watch?v=VIDEO_ID)"
+                    >
+                    <button onclick="loadVideo()">Cargar Video</button>
+                </div>
+            </div>
+
+            <div class="video-section" id="videoSection">
+                <div class="editing-banner" id="editingBanner" style="display: none;">
+                    ✏️ Editando fragmento: <span id="editingFragmentName"></span>
+                    <button class="btn-cancel-edit" onclick="cancelEdit()">✕ Cancelar</button>
+                </div>
+                <div class="video-wrapper">
+                    <div id="player"></div>
+                </div>
+
+                <div class="controls">
+                    <div class="editing-mode-indicator" id="editingModeIndicator" style="display: none;">
+                        <span>✏️ Editando fragmento guardado - Los cambios se guardan automáticamente</span>
+                    </div>
+                    
+                    <div class="time-display">
+                        <div class="time-item">
+                            <span class="time-label">Inicio</span>
+                            <span class="time-value" id="startTimeDisplay">0:00</span>
+                        </div>
+                        <div class="time-item">
+                            <span class="time-label">Fin</span>
+                            <span class="time-value" id="endTimeDisplay">0:00</span>
+                        </div>
+                        <div class="time-item">
+                            <span class="time-label">Duración</span>
+                            <span class="time-value" id="durationDisplay">0:00</span>
+                        </div>
+                    </div>
+
+                    <div class="range-container">
+                        <div class="range-track"></div>
+                        <div class="range-selection" id="rangeSelection"></div>
+                        <input 
+                            type="range" 
+                            id="startRange" 
+                            min="0" 
+                            max="100" 
+                            value="0"
+                            step="0.1"
+                        >
+                        <input 
+                            type="range" 
+                            id="endRange" 
+                            min="0" 
+                            max="100" 
+                            value="100"
+                            step="0.1"
+                        >
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn-preview" onclick="previewClip()">VISTA PREVIA</button>
+                        <button class="btn-save" id="saveBtn" onclick="saveClip()">GUARDAR</button>
+                        <button class="btn-save-changes" id="saveChangesBtn" onclick="saveClipChanges()" style="display: none;">💾 GUARDAR CAMBIOS</button>
+                        <button class="btn-new" onclick="newVideo()">NUEVO FRAG</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="playlist-section">
+                <div class="playlists-header">
+                    <h2>PLAYLISTS</h2>
+                    <button class="btn-add-playlist" onclick="showCreatePlaylistModal()">+</button>
+                </div>
+
+                <div class="playlists-container" id="playlistsContainer">
+                    <div class="empty-state">
+                        <svg fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                            <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
+                        </svg>
+                        <p>No tienes playlists.<br>¡Crea tu primera playlist!</p>
+                    </div>
+                </div>
+
+                <!-- Controles de reproducción flotantes -->
+                <div class="playback-controls" id="playbackControls" style="display: none;">
+                    <div class="playback-info">
+                        <span class="playback-playlist-name" id="playbackPlaylistName"></span>
+                        <span class="playback-status">🔁 Reproduciendo en Loop</span>
+                    </div>
+                    <button class="btn-stop-playback" onclick="stopPlayback()">
+                        ⏹️ Detener
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal para crear nueva playlist -->
+            <div class="modal" id="createPlaylistModal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Crear Nueva Playlist</h3>
+                        <button class="modal-close" onclick="closeCreatePlaylistModal()">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <input 
+                            type="text" 
+                            id="newPlaylistName" 
+                            placeholder="Nombre de la nueva playlist"
+                            maxlength="50"
+                        >
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-modal-cancel" onclick="closeCreatePlaylistModal()">Cancelar</button>
+                        <button class="btn-modal-create" onclick="createNewPlaylist()">Crear</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal para guardar fragmento -->
+            <div class="modal" id="saveClipModal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>GUARDAR EN:</h3>
+                        <button class="modal-close" onclick="closeSaveClipModal()">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <select id="playlistSelect" class="playlist-select">
+                            <option value="">Selecciona una playlist</option>
+                        </select>
+                        <div class="modal-divider">
+                            <button class="btn-create-new-playlist" onclick="showCreateFromSaveModal()">
+                                CREAR NUEVA PLAYLIST
+                                <span class="plus-icon">+</span>
+                            </button>
+                            <p class="modal-info">El fragmento se creará en la nueva playlist</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-modal-save" onclick="saveClipToPlaylist()">Guardar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script src="script.js"></script>
+</body>
+</html>
