@@ -243,25 +243,86 @@ input[type="range"]::-moz-range-thumb {
     z-index: 1;
 }
 
-.action-buttons {
-    display: flex;
-    gap: 10px;
+.guardar-wrap {
+    text-align: center;
+    margin-bottom: 20px;
 }
 
-.action-buttons button {
-    flex: 1;
-}
-
-.btn-preview {
-    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-}
-
-.btn-save {
+.btn-guardar {
     background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    padding: 12px 40px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 10px;
 }
 
-.btn-new {
-    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+.transport-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.btn-transport {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 2px solid #333;
+    background: white;
+    color: #333;
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    transition: all 0.15s ease;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+}
+
+.btn-transport:hover {
+    background: #f0f0f0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.btn-transport:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
+.btn-playpause {
+    width: 64px;
+    height: 64px;
+    font-size: 28px;
+    background: #333;
+    color: white;
+    border-color: #333;
+}
+
+.btn-playpause:hover {
+    background: #555;
+}
+
+.btn-prev,
+.btn-next {
+    opacity: 0.4;
+    transition: all 0.2s ease;
+}
+
+.btn-prev.active,
+.btn-next.active {
+    opacity: 1;
+}
+
+.active-playlist-info {
+    text-align: center;
+    margin-top: 14px;
+    font-size: 14px;
+    color: #667eea;
+    font-weight: 600;
+    animation: fadeIn 0.3s ease;
 }
 
 .playlist-section {
@@ -715,58 +776,6 @@ input[type="range"]::-moz-range-thumb {
     box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
 }
 
-.playback-controls {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 20px 30px;
-    border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    animation: slideIn 0.3s ease-out;
-}
-
-@keyframes slideIn {
-    from {
-        transform: translateY(100px);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
-.playback-info {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.playback-playlist-name {
-    font-weight: bold;
-    font-size: 16px;
-}
-
-.playback-status {
-    font-size: 14px;
-    opacity: 0.9;
-}
-
-.btn-stop-playback {
-    background: white;
-    color: #eb3349;
-    padding: 10px 20px;
-    font-size: 14px;
-    white-space: nowrap;
-    font-weight: bold;
-}
-
 .clip-count {
     background: #667eea;
     color: white;
@@ -977,23 +986,6 @@ input[type="range"]::-moz-range-thumb {
     .clip-actions-mini {
         width: 100%;
         justify-content: center;
-    }
-
-    .playback-controls {
-        bottom: 10px;
-        right: 10px;
-        left: 10px;
-        flex-direction: column;
-        padding: 15px;
-    }
-
-    .playback-info {
-        width: 100%;
-        text-align: center;
-    }
-
-    .btn-stop-playback {
-        width: 100%;
     }
 
     .modal-content {
