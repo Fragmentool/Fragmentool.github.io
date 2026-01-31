@@ -22,67 +22,58 @@
                     <input 
                         type="text" 
                         id="videoUrl" 
-                        placeholder="Pega aquí la URL del video de YouTube (ej: https://www.youtube.com/watch?v=VIDEO_ID)"
+                        placeholder="Pega aquí la URL del video de YouTube"
+                        onfocus="clearUrlInput()"
+                        onkeydown="if(event.key==='Enter') loadVideo()"
                     >
-                    <button onclick="loadVideo()">Cargar Video</button>
+                    <button onclick="loadVideo()">CARGAR VIDEO</button>
                 </div>
             </div>
 
             <div class="video-section" id="videoSection">
-                <div class="editing-banner" id="editingBanner" style="display: none;">
-                    ✏️ Editando fragmento: <span id="editingFragmentName"></span>
-                    <button class="btn-cancel-edit" onclick="cancelEdit()">✕ Cancelar</button>
-                </div>
                 <div class="video-wrapper">
                     <div id="player"></div>
                 </div>
 
                 <div class="controls">
                     <div class="editing-mode-indicator" id="editingModeIndicator" style="display: none;">
-                        <span>✏️ Editando fragmento guardado - Los cambios se guardan automáticamente</span>
+                        <span>✏️ Editando fragmento guardado – cambios automáticos</span>
                     </div>
                     
                     <div class="time-display">
                         <div class="time-item">
-                            <span class="time-label">Inicio</span>
+                            <span class="time-label">INICIO</span>
                             <span class="time-value" id="startTimeDisplay">0:00</span>
                         </div>
                         <div class="time-item">
-                            <span class="time-label">Fin</span>
+                            <span class="time-label">FIN</span>
                             <span class="time-value" id="endTimeDisplay">0:00</span>
                         </div>
                         <div class="time-item">
-                            <span class="time-label">Duración</span>
+                            <span class="time-label">DURACION</span>
                             <span class="time-value" id="durationDisplay">0:00</span>
                         </div>
+                    </div>
+
+                    <div class="guardar-wrap">
+                        <button class="btn-guardar" onclick="openSaveClipModal()">GUARDAR</button>
                     </div>
 
                     <div class="range-container">
                         <div class="range-track"></div>
                         <div class="range-selection" id="rangeSelection"></div>
-                        <input 
-                            type="range" 
-                            id="startRange" 
-                            min="0" 
-                            max="100" 
-                            value="0"
-                            step="0.1"
-                        >
-                        <input 
-                            type="range" 
-                            id="endRange" 
-                            min="0" 
-                            max="100" 
-                            value="100"
-                            step="0.1"
-                        >
+                        <input type="range" id="startRange" min="0" max="100" value="0" step="0.1">
+                        <input type="range" id="endRange" min="0" max="100" value="100" step="0.1">
                     </div>
 
-                    <div class="action-buttons">
-                        <button class="btn-preview" onclick="previewClip()">VISTA PREVIA</button>
-                        <button class="btn-save" id="saveBtn" onclick="saveClip()">GUARDAR</button>
-                        <button class="btn-save-changes" id="saveChangesBtn" onclick="saveClipChanges()" style="display: none;">💾 GUARDAR CAMBIOS</button>
-                        <button class="btn-new" onclick="newVideo()">NUEVO FRAG</button>
+                    <div class="transport-controls">
+                        <button class="btn-transport btn-prev" id="prevBtn" onclick="playPrevious()" title="Anterior">⏮</button>
+                        <button class="btn-transport btn-playpause" id="playPauseBtn" onclick="togglePlayPause()" title="Reproducir / Pausar">▶</button>
+                        <button class="btn-transport btn-next" id="nextBtn" onclick="playNext()" title="Siguiente">⏭</button>
+                    </div>
+
+                    <div class="active-playlist-info" id="activePlaylistInfo" style="display: none;">
+                        🔁 <span id="activePlaylistName"></span>
                     </div>
                 </div>
             </div>
@@ -94,25 +85,6 @@
                 </div>
 
                 <div class="playlists-container" id="playlistsContainer">
-                    <div class="empty-state">
-                        <svg fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
-                            <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
-                        </svg>
-                        <p>No tienes playlists.<br>¡Crea tu primera playlist!</p>
-                    </div>
-                </div>
-
-                <!-- Controles de reproducción flotantes -->
-                <div class="playback-controls" id="playbackControls" style="display: none;">
-                    <div class="playback-info">
-                        <span class="playback-playlist-name" id="playbackPlaylistName"></span>
-                        <span class="playback-status">🔁 Reproduciendo en Loop</span>
-                    </div>
-                    <button class="btn-stop-playback" onclick="stopPlayback()">
-                        ⏹️ Detener
-                    </button>
-                </div>
             </div>
 
             <!-- Modal para crear nueva playlist -->
