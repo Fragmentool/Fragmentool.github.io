@@ -38,7 +38,84 @@ body {
 }
 
 .content {
+    padding: 0;
+}
+
+/* Layout de dos columnas para desktop */
+.main-layout {
+    display: flex;
+    min-height: 600px;
+}
+
+/* Sidebar de playlists (desktop) */
+.sidebar-playlists {
+    width: 360px;
+    background: #f8f9fa;
+    border-right: 3px solid #e0e0e0;
+    padding: 30px 20px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: calc(100vh - 140px);
+    scroll-behavior: smooth;
+}
+
+.sidebar-playlists::-webkit-scrollbar {
+    width: 8px;
+}
+
+.sidebar-playlists::-webkit-scrollbar-track {
+    background: #e0e0e0;
+}
+
+.sidebar-playlists::-webkit-scrollbar-thumb {
+    background: #999;
+    border-radius: 4px;
+}
+
+.sidebar-playlists::-webkit-scrollbar-thumb:hover {
+    background: #777;
+}
+
+/* Ocultar playlists móvil en desktop */
+.playlists-mobile {
+    display: none;
+}
+
+.playlists-mobile .playlists-container {
+    max-height: 500px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+}
+
+.playlists-mobile .playlists-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.playlists-mobile .playlists-container::-webkit-scrollbar-track {
+    background: #e0e0e0;
+}
+
+.playlists-mobile .playlists-container::-webkit-scrollbar-thumb {
+    background: #999;
+    border-radius: 4px;
+}
+
+.playlists-mobile .playlists-container::-webkit-scrollbar-thumb:hover {
+    background: #777;
+}
+
+/* Área principal */
+.main-area {
+    flex: 1;
     padding: 30px;
+    overflow-y: auto;
+}
+
+.playlists-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
 .input-section {
@@ -251,6 +328,7 @@ input[type="range"]::-moz-range-thumb {
 .btn-guardar {
     background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
     padding: 12px 40px;
+    width: 100%;
     font-size: 16px;
     font-weight: bold;
     border-radius: 10px;
@@ -325,10 +403,6 @@ input[type="range"]::-moz-range-thumb {
     animation: fadeIn 0.3s ease;
 }
 
-.playlist-section {
-    margin-top: 40px;
-}
-
 .playlists-header {
     display: flex;
     justify-content: space-between;
@@ -366,12 +440,6 @@ input[type="range"]::-moz-range-thumb {
 .btn-add-playlist:hover {
     transform: scale(1.05);
     background: #555;
-}
-
-.playlists-container {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
 }
 
 .playlist-item {
@@ -946,7 +1014,39 @@ input[type="range"]::-moz-range-thumb {
 }
 
 @media (max-width: 768px) {
-    .content {
+    body {
+        padding: 10px;
+    }
+
+    .container {
+        border-radius: 10px;
+    }
+
+    .header h1 {
+        font-size: 1.5em;
+    }
+
+    .header p {
+        font-size: 0.95em;
+    }
+
+    /* Layout vertical en móvil */
+    .main-layout {
+        flex-direction: column;
+    }
+
+    /* Ocultar sidebar desktop */
+    .sidebar-playlists {
+        display: none;
+    }
+
+    /* Mostrar playlists móvil */
+    .playlists-mobile {
+        display: block;
+        margin-top: 30px;
+    }
+
+    .main-area {
         padding: 20px;
     }
 
@@ -954,12 +1054,30 @@ input[type="range"]::-moz-range-thumb {
         flex-direction: column;
     }
 
-    .action-buttons {
-        flex-direction: column;
+    .transport-controls {
+        gap: 8px;
     }
 
-    .playlists-header {
-        flex-wrap: wrap;
+    .btn-transport {
+        width: 48px;
+        height: 48px;
+        font-size: 20px;
+    }
+
+    .btn-playpause {
+        width: 60px;
+        height: 60px;
+        font-size: 26px;
+    }
+
+    .playlists-header h2 {
+        font-size: 1.2em;
+    }
+
+    .btn-add-playlist {
+        width: 45px;
+        height: 45px;
+        font-size: 28px;
     }
 
     .playlist-header-row {
