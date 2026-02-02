@@ -956,7 +956,7 @@ function checkForSharedPlaylist() {
             }
             
             // Limpiar URL
-            window.history.replaceState({}, document.title, window.location.pathname);
+            window.history.replaceState({}, document.title, location.pathname);
             
         } catch (error) {
             console.error('Error al importar playlist:', error);
@@ -968,19 +968,22 @@ function checkForSharedPlaylist() {
 }
 
 function importSharedPlaylist(shareData) {
-    const validClips = shareData.clips.map(clip => ({
-        videoId: clip.videoId,
-        startTime: parseFloat(clip.startTime),
-        endTime: parseFloat(clip.endTime),
-        duration: parseFloat(clip.endTime) - parseFloat(clip.startTime),
-        name: clip.name || `Fragmento ${formatTime(clip.startTime)} - ${formatTime(clip.endTime)}`
+    savedPlaylists = savedPlaylists.filter(
+        p => p.name !== shareData.name
+    );
+
+    const clips = shareData.clips.map(c => ({
+        videoId: c.videoId,
+        startTime: +c.startTime,
+        endTime: +c.endTime,
+        duration: +c.endTime - +c.startTime,
+        name: c.name
     }));
 
     const newPlaylist = {
         id: Date.now(),
         name: shareData.name,
-        clips: validClips,
-        createdAt: new Date().toISOString(),
+        clips,
         expanded: true
     };
 
@@ -988,13 +991,21 @@ function importSharedPlaylist(shareData) {
     saveToLocalStorage();
     renderPlaylists();
 
-    showNotification(`✅ Playlist "${shareData.name}" importada`, 'success', 3000);
+    showNotification(`✅ Playlist "${newPlaylist.name}" importada`, 'success', 3000);
 
-    // 🔥 CLAVE: cargar el primer fragmento automáticamente
-    setTimeout(() => {
-        playClipDirect(newPlaylist.id, 0);
-    }, 500);
+    waitForPlayerAndPlay(newPlaylist.id);
+
 }
+
+function waitForPlayerAndPlay(playlistId) {
+    const interval = setInterval(() => {
+        if (player && isPlayerReady) {
+            clearInterval(interval);
+            playPlaylist(playlistId);
+        }
+    }, 200);
+}
+
 
 function editPlaylistName(playlistId) {
     const pl = savedPlaylists.find(p => p.id === playlistId);
@@ -1210,6 +1221,16 @@ function cloneClip(playlistId, clipIndex) {
 // ─── Editar nombres ──────────────────────────────────────────
 
 // ─── Init ────────────────────────────────────────────────────
-loadFromLocalStorage();
-renderPlaylists();
-checkForSharedPlaylist(); // Verificar si hay una playlist compartida en la URL
+document.addEventListener('DOMContentLoaded', () => {
+    const hasSharedPlaylist =
+        new URLSearchParams(window.location.search).has('playlist') ||
+        new URLSearchParams(window.location.search).has('gist');
+
+    if (!hasSharedPlaylist) {
+        loadFromLocalStorage();
+        renderPlaylists();
+    }
+
+    checkForSharedPlaylist();
+    checkForGistPlaylist();
+});
