@@ -121,7 +121,7 @@ body {
 
 /* Sidebar de playlists (desktop) */
 .sidebar-playlists {
-    width: 360px;
+    width: 480px;
     background: var(--sidebar-bg);
     border-right: 3px solid var(--border-color);
     padding: 0;
@@ -274,7 +274,7 @@ button:disabled {
     position: relative;
     width: 100%;
     flex: 1;
-    max-height: calc(100% - 280px); /* Reserva espacio para controles */
+    max-height: calc(100% - 260px); /* Ajustado para optimizar espacio */
     min-height: 200px;
     overflow: hidden;
     border-radius: 10px;
@@ -528,6 +528,22 @@ input[type="range"]::-moz-range-thumb {
     opacity: 1;
 }
 
+.btn-autoplay {
+    background: var(--time-value-bg);
+    border-color: #11998e;
+    transition: all 0.2s ease;
+}
+
+.btn-autoplay.active {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    color: white;
+    border-color: #11998e;
+}
+
+.btn-autoplay:hover {
+    transform: translateY(-2px) scale(1.05);
+}
+
 .active-playlist-info {
     text-align: center;
     margin-top: 10px;
@@ -692,6 +708,10 @@ input[type="range"]::-moz-range-thumb {
     font-weight: 500;
     color: var(--text-primary);
     cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 13px;
 }
 
 .clip-actions-mini {
@@ -700,6 +720,7 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .btn-play-clip,
+.btn-clone-clip,
 .btn-delete-clip {
     padding: 6px 12px;
     font-size: 12px;
@@ -708,6 +729,10 @@ input[type="range"]::-moz-range-thumb {
 
 .btn-play-clip {
     background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.btn-clone-clip {
+    background: linear-gradient(135deg, #ffa751 0%, #ffe259 100%);
 }
 
 .btn-delete-clip {
@@ -732,6 +757,15 @@ input[type="range"]::-moz-range-thumb {
 .modal.show {
     display: flex;
     animation: fadeIn 0.3s ease;
+}
+
+/* El modal de crear playlist debe estar por encima del modal de guardar */
+#createPlaylistModal.show {
+    z-index: 1001;
+}
+
+#sharePlaylistModal.show {
+    z-index: 1001;
 }
 
 @keyframes fadeIn {
@@ -1086,6 +1120,10 @@ input[type="range"]::-moz-range-thumb {
         flex-direction: column;
         gap: 10px;
         align-items: stretch;
+    }
+    
+    .clip-name {
+        font-size: 12px;
     }
     
     .drag-handle {
