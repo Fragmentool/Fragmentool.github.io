@@ -44,7 +44,9 @@ body {
 /* Layout de dos columnas para desktop */
 .main-layout {
     display: flex;
-    min-height: 600px;
+    /* Altura total disponible (ajusta 160px si tienes otro header/footer) */
+    height: calc(100vh - 160px);
+    gap: 0;
 }
 
 /* Sidebar de playlists (desktop) */
@@ -52,11 +54,18 @@ body {
     width: 360px;
     background: #f8f9fa;
     border-right: 3px solid #e0e0e0;
-    padding: 30px 20px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    max-height: calc(100vh - 140px);
-    scroll-behavior: smooth;
+    padding: 0;                /* movemos padding a los hijos para controlar mejor */
+    display: flex;
+    flex-direction: column;
+    height: 100%;              /* importante: ocupar la altura del .main-layout */
+    overflow-y: auto;         /* EL SCROLL debe estar aquí */
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Opcional: un padding interior constante */
+.sidebar-playlists .playlists-header,
+.sidebar-playlists .playlists-container {
+    padding: 20px;
 }
 
 .sidebar-playlists::-webkit-scrollbar {
@@ -105,17 +114,19 @@ body {
     background: #777;
 }
 
-/* Área principal */
 .main-area {
     flex: 1;
     padding: 30px;
-    overflow-y: auto;
+    overflow: hidden; /* ✅ nunca scroll aquí */
 }
-
 .playlists-container {
     display: flex;
     flex-direction: column;
     gap: 15px;
+    /* No overflow aquí: el overflow está en .sidebar-playlists */
+    /* flex: 1 no es estrictamente necesario, pero mantiene la estructura */
+    flex: 1 1 auto;
+    padding-top: 12px;
 }
 
 .input-section {
@@ -197,21 +208,31 @@ button:disabled {
 
 .controls {
     background: #f8f9fa;
-    padding: 20px;
-    border-radius: 10px;
-    margin-bottom: 20px;
+    padding: 16px;        /* antes 20px */
+    margin-bottom: 16px;  /* antes 20px */
+    gap: 10px;
 }
 
 .editing-mode-indicator {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 12px 20px;
+    padding: 8px 10px;
     border-radius: 8px;
     text-align: center;
     margin-bottom: 15px;
     font-weight: 500;
     font-size: 14px;
     animation: fadeIn 0.3s ease-in;
+}
+
+@media (max-height: 700px) {
+    .controls {
+        padding: 12px;
+    }
+
+    .video-wrapper {
+        margin-bottom: 12px;
+    }
 }
 
 @keyframes fadeIn {
@@ -228,7 +249,7 @@ button:disabled {
 .time-display {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
     font-size: 14px;
     color: #666;
 }
@@ -247,22 +268,22 @@ button:disabled {
 
 .time-value {
     background: white;
-    padding: 8px 15px;
+    padding: 6px 12px;
     border-radius: 5px;
     font-family: monospace;
-    font-size: 16px;
+    font-size: 14px;
     color: #667eea;
 }
 
 .range-container {
     position: relative;
-    height: 60px;
-    margin-bottom: 20px;
+    height: 20px;
+    margin-bottom: 10px;
 }
 
 .range-track {
     position: absolute;
-    top: 25px;
+    top: 2px;
     left: 0;
     right: 0;
     height: 10px;
@@ -272,7 +293,7 @@ button:disabled {
 
 .range-selection {
     position: absolute;
-    top: 25px;
+    top: 2px;
     height: 10px;
     background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
     border-radius: 5px;
@@ -283,7 +304,7 @@ input[type="range"] {
     position: absolute;
     top: 0;
     width: 100%;
-    height: 60px;
+    height: 15px;
     -webkit-appearance: none;
     background: transparent;
     pointer-events: none;
@@ -327,29 +348,30 @@ input[type="range"]::-moz-range-thumb {
 
 .btn-guardar {
     background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    padding: 12px 40px;
+    padding: 10px 20px;
     width: 100%;
     font-size: 16px;
     font-weight: bold;
     border-radius: 10px;
+    margin-top: 20px;
 }
 
 .transport-controls {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     margin-top: 10px;
 }
 
 .btn-transport {
-    width: 52px;
-    height: 52px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     border: 2px solid #333;
     background: white;
     color: #333;
-    font-size: 22px;
+    font-size: 25px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -371,9 +393,9 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .btn-playpause {
-    width: 64px;
-    height: 64px;
-    font-size: 28px;
+    width: 54px;
+    height: 54px;
+    font-size: 35px;
     background: #333;
     color: white;
     border-color: #333;
@@ -396,7 +418,7 @@ input[type="range"]::-moz-range-thumb {
 
 .active-playlist-info {
     text-align: center;
-    margin-top: 14px;
+    margin-top: 10px;
     font-size: 14px;
     color: #667eea;
     font-weight: 600;
@@ -404,13 +426,17 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .playlists-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: #f8f9fa;       /* mismo fondo que la sidebar para que no se note */
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 3px solid #333;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e6e6e6;
 }
+
 
 .playlists-header h2 {
     color: #333;
@@ -478,7 +504,15 @@ input[type="range"]::-moz-range-thumb {
     cursor: pointer;
     transition: background 0.2s, color 0.2s;
     user-select: none;
+    padding: 5px 8px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
+
+
+
 
 .playlist-name-label:hover {
     background: #f0f0f0;
@@ -1032,13 +1066,23 @@ input[type="range"]::-moz-range-thumb {
 
     /* Layout vertical en móvil */
     .main-layout {
-        flex-direction: column;
-    }
-
+    display: flex;
+    /* Altura total disponible (ajusta 160px si tienes otro header/footer) */
+    height: calc(100vh - 160px);
+    gap: 0;
+}
     /* Ocultar sidebar desktop */
     .sidebar-playlists {
-        display: none;
-    }
+    width: 360px;
+    background: #f8f9fa;
+    border-right: 3px solid #e0e0e0;
+
+    display: flex;
+    flex-direction: column;
+
+    max-height: calc(100vh - 140px); /* altura visible */
+    overflow-y: auto;               /* ✅ scroll SOLO aquí */
+}
 
     /* Mostrar playlists móvil */
     .playlists-mobile {
