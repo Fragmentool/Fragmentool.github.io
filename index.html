@@ -11,12 +11,12 @@
         <div class="header">
             <h1>🎬 Creador de Playlist de Fragmentos</h1>
             <p>Crea tu lista de reproducción personalizada con fragmentos específicos de videos de YouTube</p>
+            <button class="btn-theme-toggle" onclick="toggleTheme()" title="Cambiar tema">
+                <span class="theme-icon">🌙</span>
+            </button>
         </div>
 
         <div class="content">
-            <div class="alert alert-error" id="errorAlert"></div>
-            <div class="alert alert-success" id="successAlert"></div>
-
             <!-- Layout de dos columnas en desktop -->
             <div class="main-layout">
                 <!-- Sidebar izquierdo (playlists) - solo visible en desktop -->
@@ -49,8 +49,9 @@
                         </div>
 
                         <div class="controls">
-                            <div class="editing-mode-indicator" id="editingModeIndicator" style="display: none;">
-                                <span>✏️ Editando fragmento guardado – cambios automáticos</span>
+                            <!-- Indicador unificado de notificaciones - siempre visible -->
+                            <div class="notification-indicator hidden" id="notificationIndicator">
+                                <span id="notificationText">Listo para crear fragmentos</span>
                             </div>
                             
                             <div class="time-display">
@@ -76,9 +77,9 @@
                             </div>
 
                             <div class="transport-controls">
-                                <button class="btn-transport btn-prev" id="prevBtn" onclick="playPrevious()" title="Anterior">⏮</button>
+                                <button class="btn-transport btn-prev" id="prevBtn" onclick="playPrevious()" title="Anterior">⮜</button>
                                 <button class="btn-transport btn-playpause" id="playPauseBtn" onclick="togglePlayPause()" title="Reproducir / Pausar">▶</button>
-                                <button class="btn-transport btn-next" id="nextBtn" onclick="playNext()" title="Siguiente">⏭</button>
+                                <button class="btn-transport btn-next" id="nextBtn" onclick="playNext()" title="Siguiente">⮞</button>
                             </div>
 
                             <div class="guardar-wrap">
@@ -86,7 +87,7 @@
                             </div>
 
                             <div class="active-playlist-info" id="activePlaylistInfo" style="display: none;">
-                                🔁 <span id="activePlaylistName"></span>
+                                📂 <span id="activePlaylistName"></span>
                             </div>
                         </div>
                     </div>
@@ -146,6 +147,39 @@
                     </div>
                     <div class="modal-footer">
                         <button class="btn-modal-save" onclick="saveClipToPlaylist()">Guardar</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal para compartir playlist -->
+            <div class="modal" id="sharePlaylistModal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>🔗 Compartir Playlist</h3>
+                        <button class="modal-close" onclick="closeSharePlaylistModal()">✕</button>
+                    </div>
+                    <div class="modal-body">
+                        <p style="margin-bottom: 15px; color: var(--text-secondary);">
+                            Comparte este enlace para que otros puedan importar tu playlist:
+                        </p>
+                        <div class="share-url-container">
+                            <input 
+                                type="text" 
+                                class="share-url-input" 
+                                id="shareUrlInput" 
+                                readonly
+                                onclick="this.select()"
+                            >
+                            <button class="btn-copy-url" onclick="copyShareUrl()">
+                                📋 Copiar
+                            </button>
+                        </div>
+                        <p class="modal-info">
+                            💡 Consejo: Quien reciba este enlace podrá importar la playlist completa con un solo clic
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn-modal-cancel" onclick="closeSharePlaylistModal()">Cerrar</button>
                     </div>
                 </div>
             </div>
