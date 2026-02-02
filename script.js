@@ -4,13 +4,13 @@ let currentVideoId = '';
 let videoDuration = 0;
 let savedPlaylists = [];
 let isPlayerReady = false;
-let lastModifiedPlaylistId = null; // Última playlist donde se guardó un fragmento
+let lastModifiedPlaylistId = null;
 
 // Estado de reproducción de playlist
 let isPlayingAll = false;
 let currentPlayingIndex = -1;
 let currentPlayingPlaylistId = null;
-let playInterval = null;       // intervalo que vigila el fin del clip en playlist
+let playInterval = null;
 
 // Estado de edición (fragmento guardado activo)
 let currentEditingPlaylistId = null;
@@ -22,6 +22,65 @@ let fragmentPreviewInterval = null;
 
 // Fragmento pendiente (esperando ser guardado)
 let pendingClip = null;
+
+// ─── Modo día/noche ──────────────────────────────────────────
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    
+    // Actualizar icono
+    const icon = document.querySelector('.theme-icon');
+    icon.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+}
+
+// Cargar tema guardado al inicio
+function loadTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    const icon = document.querySelector('.theme-icon');
+    if (icon) {
+        icon.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+    }
+}
+
+// ─── Sistema de notificaciones unificado ─────────────────────
+function showNotification(message, type = 'success', duration = 2000) {
+    const indicator = document.getElementById('notificationIndicator');
+    const text = document.getElementById('notificationText');
+    
+    // Limpiar clases anteriores
+    indicator.className = 'notification-indicator';
+    
+    // Agregar clase según tipo
+    if (type === 'success') {
+        indicator.classList.add('success');
+    } else if (type === 'editing') {
+        indicator.classList.add('editing');
+    }
+    
+    text.textContent = message;
+    
+    // Auto-ocultar después de la duración (volver a estado por defecto)
+    if (duration > 0) {
+        setTimeout(() => {
+            resetNotification();
+        }, duration);
+    }
+}
+
+function resetNotification() {
+    const indicator = document.getElementById('notificationIndicator');
+    const text = document.getElementById('notificationText');
+    
+    indicator.className = 'notification-indicator hidden';
+    text.textContent = 'Listo para crear fragmentos';
+}
+
+function hideNotification() {
+    resetNotification();
+}
 
 // ─── Utilidades ──────────────────────────────────────────────
 function extractVideoId(url) {
@@ -36,13 +95,6 @@ function formatTime(seconds) {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-function showAlert(message, type = 'error') {
-    const alert = document.getElementById(type === 'error' ? 'errorAlert' : 'successAlert');
-    alert.textContent = message;
-    alert.classList.add('show');
-    setTimeout(() => alert.classList.remove('show'), type === 'error' ? 4000 : 1800);
-}
-
 // ─── URL input ───────────────────────────────────────────────
 function clearUrlInput() {
     document.getElementById('videoUrl').value = '';
@@ -51,17 +103,21 @@ function clearUrlInput() {
 // ─── Cargar video ────────────────────────────────────────────
 function onYouTubeIframeAPIReady() {}
 
-
-
 function loadVideo() {
     const url = document.getElementById('videoUrl').value.trim();
-    if (!url) { showAlert('Por favor, ingresa una URL de YouTube'); return; }
+    if (!url) { 
+        showNotification('Por favor, ingresa una URL de YouTube', 'error', 3000); 
+        return; 
+    }
 
     const videoId = extractVideoId(url);
-    if (!videoId) { showAlert('URL de YouTube inválida'); return; }
+    if (!videoId) { 
+        showNotification('URL de YouTube inválida', 'error', 3000); 
+        return; 
+    }
 
     currentVideoId = videoId;
-    stopEverything(); // limpia cualquier estado de reproducción
+    stopEverything();
 
     // Restablecer sliders a valores por defecto
     document.getElementById('startRange').value = 0;
@@ -74,7 +130,6 @@ function loadVideo() {
             events: { onReady: onPlayerReady, onStateChange: onPlayerStateChange }
         });
     } else {
-        // Usar cueVideoById para NO auto-reproducir
         player.cueVideoById(videoId);
     }
 }
@@ -84,14 +139,13 @@ function onPlayerReady() {
     videoDuration = player.getDuration();
     document.getElementById('videoSection').classList.add('active');
     
-    // Reiniciar sliders a valores iniciales
     document.getElementById('startRange').value = 0;
     document.getElementById('startRange').max = videoDuration;
     document.getElementById('endRange').value = videoDuration;
     document.getElementById('endRange').max = videoDuration;
     
     updateTimeDisplays();
-    showAlert('Video cargado correctamente', 'success');
+    showNotification('✅ Video cargado correctamente', 'success');
 }
 
 function onPlayerStateChange(event) {
@@ -100,9 +154,11 @@ function onPlayerStateChange(event) {
         updateRangeMax();
     }
     if (event.data === YT.PlayerState.BUFFERING || event.data === YT.PlayerState.CUED) {
-        setTimeout(() => { videoDuration = player.getDuration(); updateRangeMax(); }, 500);
+        setTimeout(() => { 
+            videoDuration = player.getDuration(); 
+            updateRangeMax(); 
+        }, 500);
     }
-    // Sincronizar icono del botón play/pause
     updatePlayPauseIcon();
 }
 
@@ -150,6 +206,8 @@ function updateUIForClip(clip) {
 
 // ─── Listeners de los sliders ────────────────────────────────
 document.addEventListener('DOMContentLoaded', function () {
+    loadTheme(); // Cargar tema al inicio
+    
     const startRange = document.getElementById('startRange');
     const endRange   = document.getElementById('endRange');
     
@@ -161,21 +219,15 @@ document.addEventListener('DOMContentLoaded', function () {
         updateTimeDisplays();
         scheduleAutoSave();
         
-        // Sincronizar con el video: saltar a la posición de inicio y reproducir
         if (player && isPlayerReady && !isPlayingAll) {
-            // Cancelar timeout anterior
             if (startMoveTimeout) clearTimeout(startMoveTimeout);
             
-            // Esperar 300ms después del último movimiento para evitar saltos continuos
             startMoveTimeout = setTimeout(() => {
                 const startTime = parseFloat(this.value);
                 player.seekTo(startTime, true);
                 
-                // Solo auto-reproducir si no estamos en modo edición de playlist
                 if (currentEditingPlaylistId === null) {
                     player.playVideo();
-                    
-                    // Iniciar monitoreo para detener en el fin
                     startFragmentPreviewMonitor();
                 }
             }, 300);
@@ -187,29 +239,19 @@ document.addEventListener('DOMContentLoaded', function () {
         updateTimeDisplays();
         scheduleAutoSave();
         
-        // Sincronizar con el video: si está reproduciéndose, reiniciar el monitoreo
         if (player && isPlayerReady && !isPlayingAll && player.getPlayerState() === YT.PlayerState.PLAYING) {
-            // Cancelar timeout anterior
             if (endMoveTimeout) clearTimeout(endMoveTimeout);
             
-            // Esperar 300ms después del último movimiento
             endMoveTimeout = setTimeout(() => {
-                // Reiniciar monitoreo con el nuevo fin
                 startFragmentPreviewMonitor();
             }, 300);
         }
     });
-
-    loadFromLocalStorage();
 });
 
-// Monitorear reproducción de fragmento y detener en el fin
+// Monitor de previsualización de fragmento (modo fragmentar)
 function startFragmentPreviewMonitor() {
-    // Limpiar intervalo anterior si existe
-    if (fragmentPreviewInterval) {
-        clearInterval(fragmentPreviewInterval);
-        fragmentPreviewInterval = null;
-    }
+    if (fragmentPreviewInterval) clearInterval(fragmentPreviewInterval);
     
     const endTime = parseFloat(document.getElementById('endRange').value);
     
@@ -220,148 +262,157 @@ function startFragmentPreviewMonitor() {
             return;
         }
         
-        const currentTime = player.getCurrentTime();
-        const playerState = player.getPlayerState();
-        
-        // Si llegamos al fin, pausar
-        if (currentTime >= endTime) {
-            player.pauseVideo();
+        if (isPlayingAll) {
             clearInterval(fragmentPreviewInterval);
             fragmentPreviewInterval = null;
+            return;
         }
         
-        // Si el usuario pausó o detuvo manualmente, limpiar intervalo
-        if (playerState === YT.PlayerState.PAUSED || playerState === YT.PlayerState.ENDED) {
+        const currentTime = player.getCurrentTime();
+        if (currentTime >= endTime) {
             clearInterval(fragmentPreviewInterval);
             fragmentPreviewInterval = null;
+            player.pauseVideo();
         }
     }, 100);
 }
 
-// ─── Auto-guardado de fragmento editado ─────────────────────
+// ─── Auto-guardado ───────────────────────────────────────────
 function scheduleAutoSave() {
     if (currentEditingPlaylistId === null || currentEditingClipIndex === null) return;
+    
     if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
-    autoSaveTimeout = setTimeout(autoSaveClipChanges, 500);
-}
-
-function autoSaveClipChanges() {
-    if (currentEditingPlaylistId === null || currentEditingClipIndex === null) return;
-    const playlist = savedPlaylists.find(p => p.id === currentEditingPlaylistId);
-    if (!playlist || !playlist.clips[currentEditingClipIndex]) return;
-
-    const clip  = playlist.clips[currentEditingClipIndex];
-    const start = parseFloat(document.getElementById('startRange').value);
-    const end   = parseFloat(document.getElementById('endRange').value);
-    clip.startTime = start;
-    clip.endTime   = end;
-    clip.duration  = end - start;
-    saveToLocalStorage();
-    renderPlaylists();
-
-    // feedback
-    const el = document.getElementById('successAlert');
-    el.textContent = '✓ Cambios guardados automáticamente';
-    el.classList.add('show');
-    setTimeout(() => el.classList.remove('show'), 1500);
+    
+    autoSaveTimeout = setTimeout(() => {
+        const pl = savedPlaylists.find(p => p.id === currentEditingPlaylistId);
+        if (!pl || currentEditingClipIndex >= pl.clips.length) return;
+        
+        const clip = pl.clips[currentEditingClipIndex];
+        const s = parseFloat(document.getElementById('startRange').value);
+        const e = parseFloat(document.getElementById('endRange').value);
+        
+        clip.startTime = s;
+        clip.endTime   = e;
+        clip.duration  = e - s;
+        
+        saveToLocalStorage();
+        showNotification('💾 Cambios guardados automáticamente', 'editing', 1500);
+    }, 1000);
 }
 
 // ─── Controles de transporte ─────────────────────────────────
 function updatePlayPauseIcon() {
     const btn = document.getElementById('playPauseBtn');
-    if (!player || !isPlayerReady) { btn.textContent = '▶'; return; }
-    btn.textContent = (player.getPlayerState() === YT.PlayerState.PLAYING) ? '⏸' : '▶';
+    if (!player || !isPlayerReady) return;
+    
+    const state = player.getPlayerState();
+    btn.textContent = (state === YT.PlayerState.PLAYING) ? '❚❚' : '▶';
+}
+
+function togglePlayPause() {
+    if (!player || !isPlayerReady) return;
+    
+    const state = player.getPlayerState();
+    
+    // CRÍTICO: Si estamos en modo playlist, NO permitir pausa manual
+    // Solo permitir pausa cuando NO estamos reproduciendo una playlist
+    if (isPlayingAll) {
+        // Detener completamente la reproducción de la playlist
+        stopEverything();
+        player.pauseVideo();
+        return;
+    }
+    
+    // Modo normal (no playlist)
+    if (state === YT.PlayerState.PLAYING) {
+        player.pauseVideo();
+        if (fragmentPreviewInterval) {
+            clearInterval(fragmentPreviewInterval);
+            fragmentPreviewInterval = null;
+        }
+    } else {
+        const s = parseFloat(document.getElementById('startRange').value);
+        player.seekTo(s, true);
+        player.playVideo();
+        startFragmentPreviewMonitor();
+    }
+    
+    updatePlayPauseIcon();
+}
+
+function playPrevious() {
+    if (!isPlayingAll || currentPlayingPlaylistId === null) return;
+    
+    const playlist = savedPlaylists.find(p => p.id === currentPlayingPlaylistId);
+    if (!playlist) return;
+    
+    currentPlayingIndex--;
+    if (currentPlayingIndex < 0) currentPlayingIndex = playlist.clips.length - 1;
+    
+    playClipFromPlaylist(currentPlayingPlaylistId, currentPlayingIndex);
+}
+
+function playNext() {
+    if (!isPlayingAll || currentPlayingPlaylistId === null) return;
+    
+    const playlist = savedPlaylists.find(p => p.id === currentPlayingPlaylistId);
+    if (!playlist) return;
+    
+    currentPlayingIndex++;
+    if (currentPlayingIndex >= playlist.clips.length) currentPlayingIndex = 0;
+    
+    playClipFromPlaylist(currentPlayingPlaylistId, currentPlayingIndex);
 }
 
 function updateTransportButtons() {
-    const prev = document.getElementById('prevBtn');
-    const next = document.getElementById('nextBtn');
-    const hasPlaylist = currentPlayingPlaylistId !== null;
-    prev.classList.toggle('active', hasPlaylist);
-    next.classList.toggle('active', hasPlaylist);
-
-    const info = document.getElementById('activePlaylistInfo');
-    if (hasPlaylist) {
-        const pl = savedPlaylists.find(p => p.id === currentPlayingPlaylistId);
-        document.getElementById('activePlaylistName').textContent = pl ? pl.name : '';
-        info.style.display = 'block';
-    } else {
-        info.style.display = 'none';
-    }
-}
-
-// Play / Pause central
-function togglePlayPause() {
-    if (!player || !isPlayerReady) return;
-    const state = player.getPlayerState();
-
-    if (currentPlayingPlaylistId !== null) {
-        // ── Modo playlist ──
-        if (state === YT.PlayerState.PLAYING) {
-            player.pauseVideo();
-        } else {
-            player.playVideo();
-        }
-    } else {
-        // ── Modo fragmento ──
-        if (state === YT.PlayerState.PLAYING) {
-            // pausar y cancelar intervalo de preview
-            player.pauseVideo();
-            if (fragmentPreviewInterval) {
-                clearInterval(fragmentPreviewInterval);
-                fragmentPreviewInterval = null;
-            }
-        } else {
-            // iniciar/reiniciar preview del fragmento
-            startFragmentPreview();
-        }
-    }
-}
-
-function startFragmentPreview() {
-    const start = parseFloat(document.getElementById('startRange').value);
-    player.seekTo(start, true);
-    player.playVideo();
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
     
-    // Usar la misma función de monitoreo
-    startFragmentPreviewMonitor();
+    if (isPlayingAll && currentPlayingPlaylistId !== null) {
+        prevBtn.classList.add('active');
+        nextBtn.classList.add('active');
+    } else {
+        prevBtn.classList.remove('active');
+        nextBtn.classList.remove('active');
+    }
 }
 
-// Anterior
-function playPrevious() {
-    if (currentPlayingPlaylistId === null) return;
-    const playlist = savedPlaylists.find(p => p.id === currentPlayingPlaylistId);
-    if (!playlist || playlist.clips.length === 0) return;
-
-    currentPlayingIndex--;
-    if (currentPlayingIndex < 0) currentPlayingIndex = playlist.clips.length - 1;
-    playClipFromPlaylist(currentPlayingPlaylistId, currentPlayingIndex);
-}
-
-// Siguiente
-function playNext() {
-    if (currentPlayingPlaylistId === null) return;
-    const playlist = savedPlaylists.find(p => p.id === currentPlayingPlaylistId);
-    if (!playlist || playlist.clips.length === 0) return;
-
-    currentPlayingIndex++;
-    if (currentPlayingIndex >= playlist.clips.length) currentPlayingIndex = 0;
-    playClipFromPlaylist(currentPlayingPlaylistId, currentPlayingIndex);
-}
-
-// ─── Modal guardar fragmento ─────────────────────────────────
+// ─── Guardar fragmento ───────────────────────────────────────
 function openSaveClipModal() {
-    if (!player || !isPlayerReady) { showAlert('Primero carga un video'); return; }
-    const start = parseFloat(document.getElementById('startRange').value);
-    const end   = parseFloat(document.getElementById('endRange').value);
-    if (end - start < 1) { showAlert('El fragmento debe tener al menos 1 segundo'); return; }
+    if (!player || !isPlayerReady || !currentVideoId) {
+        showNotification('Primero carga un video', 'error', 3000);
+        return;
+    }
 
-    const videoData = player.getVideoData();
-    let name = (videoData.title || 'Video sin título').replace(/[<>:"/\\|?*]/g, '');
-    if (name.length > 50) name = name.substring(0, 47) + '...';
+    const s = parseFloat(document.getElementById('startRange').value);
+    const e = parseFloat(document.getElementById('endRange').value);
 
-    pendingClip = { id: Date.now(), videoId: currentVideoId, startTime: start, endTime: end, duration: end - start, name };
-    updatePlaylistSelector();
+    if (e <= s) {
+        showNotification('El tiempo de fin debe ser mayor al de inicio', 'error', 3000);
+        return;
+    }
+
+    pendingClip = {
+        videoId: currentVideoId,
+        startTime: s,
+        endTime: e,
+        duration: e - s,
+        name: `Fragmento ${formatTime(s)} - ${formatTime(e)}`
+    };
+
+    const select = document.getElementById('playlistSelect');
+    select.innerHTML = '<option value="">Selecciona una playlist</option>';
+    savedPlaylists.forEach(pl => {
+        const opt = document.createElement('option');
+        opt.value = pl.id;
+        opt.textContent = pl.name;
+        select.appendChild(opt);
+    });
+
+    if (lastModifiedPlaylistId) {
+        select.value = lastModifiedPlaylistId;
+    }
+
     document.getElementById('saveClipModal').classList.add('show');
 }
 
@@ -370,39 +421,28 @@ function closeSaveClipModal() {
     pendingClip = null;
 }
 
-function updatePlaylistSelector() {
-    const select = document.getElementById('playlistSelect');
-    select.innerHTML = '<option value="">Selecciona una playlist</option>';
-    savedPlaylists.forEach(p => {
-        const opt = document.createElement('option');
-        opt.value = p.id;
-        opt.textContent = p.name;
-        // Pre-seleccionar la última playlist modificada
-        if (lastModifiedPlaylistId && p.id === lastModifiedPlaylistId) {
-            opt.selected = true;
-        }
-        select.appendChild(opt);
-    });
-}
-
 function showCreateFromSaveModal() {
-    // No cerrar saveClipModal para mantener pendingClip
-    document.getElementById('createPlaylistModal').classList.add('show');
+    showCreatePlaylistModal();
 }
 
 function saveClipToPlaylist() {
+    if (!pendingClip) return;
+
     const id = parseInt(document.getElementById('playlistSelect').value);
-    if (!id) { showAlert('Selecciona una playlist'); return; }
-    if (!pendingClip) { showAlert('No hay fragmento para guardar'); return; }
+    if (!id) {
+        showNotification('Selecciona una playlist', 'error', 3000);
+        return;
+    }
+
     const playlist = savedPlaylists.find(p => p.id === id);
-    if (!playlist) { showAlert('Playlist no encontrada'); return; }
+    if (!playlist) return;
 
     playlist.clips.push(pendingClip);
-    lastModifiedPlaylistId = id; // Guardar última playlist modificada
+    lastModifiedPlaylistId = id;
     saveToLocalStorage();
     renderPlaylists();
     closeSaveClipModal();
-    showAlert(`Fragmento guardado en "${playlist.name}"`, 'success');
+    showNotification(`✅ Fragmento guardado en "${playlist.name}"`, 'success');
     pendingClip = null;
 }
 
@@ -418,11 +458,15 @@ function closeCreatePlaylistModal() {
 
 function createNewPlaylist() {
     const name = document.getElementById('newPlaylistName').value.trim();
-    if (!name) { showAlert('Ingresa un nombre para la playlist'); return; }
+    if (!name) { 
+        showNotification('Ingresa un nombre para la playlist', 'error', 3000); 
+        return; 
+    }
 
     const hasPending = pendingClip !== null;
     const newPl = {
-        id: Date.now(), name,
+        id: Date.now(), 
+        name,
         clips: hasPending ? [{ ...pendingClip }] : [],
         createdAt: new Date().toISOString(),
         expanded: false
@@ -430,7 +474,7 @@ function createNewPlaylist() {
 
     savedPlaylists.push(newPl);
     if (hasPending) {
-        lastModifiedPlaylistId = newPl.id; // Marcar como última modificada
+        lastModifiedPlaylistId = newPl.id;
     }
     saveToLocalStorage();
     renderPlaylists();
@@ -438,18 +482,24 @@ function createNewPlaylist() {
 
     if (hasPending) {
         document.getElementById('saveClipModal').classList.remove('show');
-        showAlert(`Playlist "${name}" creada con el fragmento`, 'success');
+        showNotification(`✅ Playlist "${name}" creada con el fragmento`, 'success');
         pendingClip = null;
     } else {
-        showAlert(`Playlist "${name}" creada`, 'success');
+        showNotification(`✅ Playlist "${name}" creada`, 'success');
     }
 }
 
 // ─── Reproducción de playlists ───────────────────────────────
 function playPlaylist(playlistId) {
     const playlist = savedPlaylists.find(p => p.id === playlistId);
-    if (!playlist || playlist.clips.length === 0) { showAlert('La playlist está vacía'); return; }
-    if (!player || !isPlayerReady) { showAlert('Primero carga un video'); return; }
+    if (!playlist || playlist.clips.length === 0) { 
+        showNotification('La playlist está vacía', 'error', 3000); 
+        return; 
+    }
+    if (!player || !isPlayerReady) { 
+        showNotification('Primero carga un video', 'error', 3000); 
+        return; 
+    }
 
     stopEverything();
     isPlayingAll = true;
@@ -464,21 +514,18 @@ function playClipFromPlaylist(playlistId, clipIndex) {
     const playlist = savedPlaylists.find(p => p.id === playlistId);
     if (!playlist) { stopEverything(); return; }
 
-    // loop
     if (clipIndex >= playlist.clips.length) clipIndex = 0;
     if (clipIndex < 0) clipIndex = playlist.clips.length - 1;
     currentPlayingIndex = clipIndex;
 
     const clip = playlist.clips[clipIndex];
 
-    // activar modo edición
     currentEditingPlaylistId = playlistId;
     currentEditingClipIndex  = clipIndex;
-    document.getElementById('editingModeIndicator').style.display = 'block';
+    showNotification('✏️ Editando fragmento guardado — cambios automáticos', 'editing', 0);
 
     updateUIForClip(clip);
 
-    // Limpiar intervalo anterior ANTES de cargar nuevo video
     if (playInterval) {
         clearInterval(playInterval);
         playInterval = null;
@@ -487,34 +534,27 @@ function playClipFromPlaylist(playlistId, clipIndex) {
     const needsVideoSwitch = (clip.videoId !== currentVideoId);
 
     if (needsVideoSwitch) {
-        // Cambiar video CON auto-reproducción para playlists
         currentVideoId = clip.videoId;
         
-        // Usar loadVideoById con autoplay para garantizar reproducción
         player.loadVideoById({
             videoId: clip.videoId,
             startSeconds: clip.startTime
         });
         
-        // Esperar a que empiece a reproducir
         const checkPlaying = setInterval(() => {
             const state = player.getPlayerState();
-            // Esperar a que esté reproduciendo o buffering
             if (state === YT.PlayerState.PLAYING || state === YT.PlayerState.BUFFERING) {
                 clearInterval(checkPlaying);
                 
-                // Actualizar duración y UI
                 setTimeout(() => {
                     videoDuration = player.getDuration();
                     updateUIForClip(clip);
                 }, 500);
                 
-                // Iniciar monitoreo del fin del clip
                 startPlayInterval(clip);
             }
         }, 100);
         
-        // Timeout de seguridad: si después de 3 segundos no ha empezado, forzar play
         setTimeout(() => {
             if (player.getPlayerState() !== YT.PlayerState.PLAYING) {
                 player.seekTo(clip.startTime, true);
@@ -524,7 +564,6 @@ function playClipFromPlaylist(playlistId, clipIndex) {
         }, 3000);
         
     } else {
-        // Mismo video, solo cambiar posición y reproducir
         player.seekTo(clip.startTime, true);
         player.playVideo();
         
@@ -537,14 +576,20 @@ function playClipFromPlaylist(playlistId, clipIndex) {
     }
 }
 
-// Función auxiliar para iniciar el intervalo de monitoreo
 function startPlayInterval(clip) {
     if (playInterval) clearInterval(playInterval);
     
     playInterval = setInterval(() => {
+        // CRÍTICO: Verificar que seguimos en modo playlist
         if (!isPlayingAll) {
             clearInterval(playInterval);
             playInterval = null;
+            return;
+        }
+        
+        // CRÍTICO: Solo verificar tiempo si el video está reproduciendo
+        const state = player.getPlayerState();
+        if (state !== YT.PlayerState.PLAYING) {
             return;
         }
         
@@ -563,14 +608,15 @@ function startPlayInterval(clip) {
     }, 100);
 }
 
-// Reproducir clip individual (desde botón ▶ del fragmento)
 function playClipDirect(playlistId, clipIndex) {
     const playlist = savedPlaylists.find(p => p.id === playlistId);
     if (!playlist) return;
     const clip = playlist.clips[clipIndex];
-    if (!player || !isPlayerReady) { showAlert('Primero carga un video'); return; }
+    if (!player || !isPlayerReady) { 
+        showNotification('Primero carga un video', 'error', 3000); 
+        return; 
+    }
 
-    // Iniciar como playlist desde ese punto
     stopEverything();
     isPlayingAll = true;
     currentPlayingIndex = clipIndex;
@@ -578,7 +624,7 @@ function playClipDirect(playlistId, clipIndex) {
 
     currentEditingPlaylistId = playlistId;
     currentEditingClipIndex  = clipIndex;
-    document.getElementById('editingModeIndicator').style.display = 'block';
+    showNotification('✏️ Editando fragmento guardado — cambios automáticos', 'editing', 0);
     updateTransportButtons();
 
     updateUIForClip(clip);
@@ -588,7 +634,6 @@ function playClipDirect(playlistId, clipIndex) {
     if (needsVideoSwitch) {
         currentVideoId = clip.videoId;
         
-        // Usar loadVideoById para auto-play
         player.loadVideoById({
             videoId: clip.videoId,
             startSeconds: clip.startTime
@@ -606,7 +651,6 @@ function playClipDirect(playlistId, clipIndex) {
             }
         }, 100);
         
-        // Timeout de seguridad
         setTimeout(() => {
             if (player.getPlayerState() !== YT.PlayerState.PLAYING) {
                 player.seekTo(clip.startTime, true);
@@ -628,7 +672,6 @@ function playClipDirect(playlistId, clipIndex) {
     }
 }
 
-// Intervalo para clip individual - pausa al terminar
 function startSingleClipInterval(clip) {
     if (playInterval) clearInterval(playInterval);
     
@@ -636,6 +679,11 @@ function startSingleClipInterval(clip) {
         if (!isPlayingAll) {
             clearInterval(playInterval);
             playInterval = null;
+            return;
+        }
+        
+        const state = player.getPlayerState();
+        if (state !== YT.PlayerState.PLAYING) {
             return;
         }
         
@@ -658,21 +706,144 @@ function stopEverything() {
     currentEditingPlaylistId = null;
     currentEditingClipIndex  = null;
 
-    if (playInterval)            { clearInterval(playInterval);            playInterval = null; }
-    if (fragmentPreviewInterval) { clearInterval(fragmentPreviewInterval); fragmentPreviewInterval = null; }
+    if (playInterval) { 
+        clearInterval(playInterval); 
+        playInterval = null; 
+    }
+    if (fragmentPreviewInterval) { 
+        clearInterval(fragmentPreviewInterval); 
+        fragmentPreviewInterval = null; 
+    }
     if (player && isPlayerReady) player.pauseVideo();
 
-    document.getElementById('editingModeIndicator').style.display = 'none';
+    hideNotification();
     updateTransportButtons();
     renderPlaylists();
 }
 
-// ─── Editar nombres ──────────────────────────────────────────
+// ─── Compartir playlists ─────────────────────────────────────
+function sharePlaylist(playlistId) {
+    const playlist = savedPlaylists.find(p => p.id === playlistId);
+    if (!playlist) return;
+
+    // Crear objeto con datos de la playlist
+    const shareData = {
+        name: playlist.name,
+        clips: playlist.clips.map(clip => ({
+            videoId: clip.videoId,
+            startTime: clip.startTime,
+            endTime: clip.endTime,
+            name: clip.name
+        }))
+    };
+
+    // Comprimir datos a base64
+    const jsonString = JSON.stringify(shareData);
+    const base64Data = btoa(encodeURIComponent(jsonString));
+    
+    // Crear URL con los datos
+    const shareUrl = `${window.location.origin}${window.location.pathname}?playlist=${base64Data}`;
+    
+    // Mostrar en modal
+    document.getElementById('shareUrlInput').value = shareUrl;
+    document.getElementById('sharePlaylistModal').classList.add('show');
+}
+
+function closeSharePlaylistModal() {
+    document.getElementById('sharePlaylistModal').classList.remove('show');
+}
+
+function copyShareUrl() {
+    const input = document.getElementById('shareUrlInput');
+    input.select();
+    input.setSelectionRange(0, 99999); // Para móviles
+    
+    navigator.clipboard.writeText(input.value).then(() => {
+        const btn = document.querySelector('.btn-copy-url');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '✅ Copiado';
+        btn.classList.add('copied');
+        
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.classList.remove('copied');
+        }, 2000);
+        
+        showNotification('🔗 Enlace copiado al portapapeles', 'success');
+    }).catch(err => {
+        // Fallback para navegadores que no soportan clipboard API
+        try {
+            document.execCommand('copy');
+            showNotification('🔗 Enlace copiado al portapapeles', 'success');
+        } catch (e) {
+            showNotification('Error al copiar. Selecciona y copia manualmente.', 'error', 3000);
+        }
+    });
+}
+
+// ─── Importar playlist desde URL ─────────────────────────────
+function checkForSharedPlaylist() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const playlistData = urlParams.get('playlist');
+    
+    if (playlistData) {
+        try {
+            // Decodificar base64
+            const jsonString = decodeURIComponent(atob(playlistData));
+            const shareData = JSON.parse(jsonString);
+            
+            // Verificar que no existe una playlist con el mismo nombre y contenido
+            const exists = savedPlaylists.some(p => 
+                p.name === shareData.name && 
+                p.clips.length === shareData.clips.length
+            );
+            
+            if (exists) {
+                if (confirm(`Ya tienes una playlist llamada "${shareData.name}". ¿Quieres importar esta de todas formas?`)) {
+                    importSharedPlaylist(shareData);
+                }
+            } else {
+                importSharedPlaylist(shareData);
+            }
+            
+            // Limpiar URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+            
+        } catch (error) {
+            console.error('Error al importar playlist:', error);
+            showNotification('Error al importar la playlist compartida', 'error', 3000);
+        }
+    }
+}
+
+function importSharedPlaylist(shareData) {
+    const newPlaylist = {
+        id: Date.now(),
+        name: shareData.name,
+        clips: shareData.clips.map(clip => ({
+            ...clip,
+            duration: clip.endTime - clip.startTime
+        })),
+        createdAt: new Date().toISOString(),
+        expanded: false
+    };
+    
+    savedPlaylists.push(newPlaylist);
+    saveToLocalStorage();
+    renderPlaylists();
+    
+    showNotification(`✅ Playlist "${shareData.name}" importada con ${shareData.clips.length} fragmentos`, 'success', 3000);
+}
 function editPlaylistName(playlistId) {
     const pl = savedPlaylists.find(p => p.id === playlistId);
     if (!pl) return;
     const n = prompt('Nombre de la playlist:', pl.name);
-    if (n !== null && n.trim()) { pl.name = n.trim(); saveToLocalStorage(); renderPlaylists(); showAlert('Nombre actualizado', 'success'); }
+    if (n !== null && n.trim()) { 
+        pl.name = n.trim(); 
+        saveToLocalStorage(); 
+        renderPlaylists(); 
+        showNotification('✅ Nombre actualizado', 'success');
+    }
 }
 
 function editClipName(playlistId, clipIndex) {
@@ -681,7 +852,12 @@ function editClipName(playlistId, clipIndex) {
     const clip = pl.clips[clipIndex];
     if (!clip) return;
     const n = prompt('Nombre del fragmento:', clip.name);
-    if (n !== null && n.trim()) { clip.name = n.trim(); saveToLocalStorage(); renderPlaylists(); showAlert('Nombre actualizado', 'success'); }
+    if (n !== null && n.trim()) { 
+        clip.name = n.trim(); 
+        saveToLocalStorage(); 
+        renderPlaylists(); 
+        showNotification('✅ Nombre actualizado', 'success');
+    }
 }
 
 // ─── Eliminar ────────────────────────────────────────────────
@@ -690,16 +866,18 @@ function deletePlaylist(playlistId) {
     if (!pl || !confirm(`¿Eliminar "${pl.name}"?`)) return;
     if (currentPlayingPlaylistId === playlistId) stopEverything();
     savedPlaylists = savedPlaylists.filter(p => p.id !== playlistId);
-    saveToLocalStorage(); renderPlaylists();
-    showAlert('Playlist eliminada', 'success');
+    saveToLocalStorage(); 
+    renderPlaylists();
+    showNotification('✅ Playlist eliminada', 'success');
 }
 
 function deleteClip(playlistId, clipIndex) {
     const pl = savedPlaylists.find(p => p.id === playlistId);
     if (!pl || !confirm('¿Eliminar este fragmento?')) return;
     pl.clips.splice(clipIndex, 1);
-    saveToLocalStorage(); renderPlaylists();
-    showAlert('Fragmento eliminado', 'success');
+    saveToLocalStorage(); 
+    renderPlaylists();
+    showNotification('✅ Fragmento eliminado', 'success');
 }
 
 // ─── Renderizar playlists ────────────────────────────────────
@@ -709,7 +887,6 @@ function renderPlaylists() {
     
     const content = generatePlaylistsHTML();
     
-    // Renderizar en ambos contenedores
     if (containerDesktop) containerDesktop.innerHTML = content;
     if (containerMobile) containerMobile.innerHTML = content;
 }
@@ -734,6 +911,7 @@ function generatePlaylistsHTML() {
                     title="Doble clic para editar">${pl.name}</span>
                 <div class="playlist-actions">
                     <button class="btn-play-playlist" onclick="event.stopPropagation(); playPlaylist(${pl.id})" title="Reproducir">▶</button>
+                    <button class="btn-share-playlist" onclick="event.stopPropagation(); sharePlaylist(${pl.id})" title="Compartir">🔗</button>
                     <button class="btn-delete-playlist" onclick="event.stopPropagation(); deletePlaylist(${pl.id})" title="Eliminar">🗑</button>
                 </div>
             </div>
@@ -767,7 +945,10 @@ function generatePlaylistsHTML() {
 
 function togglePlaylist(playlistId) {
     const pl = savedPlaylists.find(p => p.id === playlistId);
-    if (pl) { pl.expanded = !pl.expanded; renderPlaylists(); }
+    if (pl) { 
+        pl.expanded = !pl.expanded; 
+        renderPlaylists(); 
+    }
 }
 
 // ─── Drag & Drop ─────────────────────────────────────────────
@@ -782,14 +963,22 @@ function handleDragStart(e) {
     e.dataTransfer.setData('text/html', e.currentTarget.innerHTML);
 }
 
-function handleDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; return false; }
+function handleDragOver(e) { 
+    e.preventDefault(); 
+    e.dataTransfer.dropEffect = 'move'; 
+    return false; 
+}
 
 function handleDragEnter(e) {
     const t = e.currentTarget;
-    if (parseInt(t.dataset.playlistId) === draggedPlaylistId && t !== draggedElement) t.classList.add('drag-over');
+    if (parseInt(t.dataset.playlistId) === draggedPlaylistId && t !== draggedElement) {
+        t.classList.add('drag-over');
+    }
 }
 
-function handleDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+function handleDragLeave(e) { 
+    e.currentTarget.classList.remove('drag-over'); 
+}
 
 function handleDrop(e) {
     e.stopPropagation();
@@ -815,16 +1004,28 @@ function handleDragEnd(e) {
 
 // ─── localStorage ────────────────────────────────────────────
 function saveToLocalStorage() {
-    try { localStorage.setItem('youtubePlaylists', JSON.stringify(savedPlaylists)); }
-    catch (e) { console.error(e); }
+    try { 
+        localStorage.setItem('youtubePlaylists', JSON.stringify(savedPlaylists)); 
+    } catch (e) { 
+        console.error(e); 
+    }
 }
 
 function loadFromLocalStorage() {
     try {
         const data = localStorage.getItem('youtubePlaylists');
-        if (data) { savedPlaylists = JSON.parse(data); renderPlaylists(); }
-    } catch (e) { console.error(e); }
+        if (data) { 
+            savedPlaylists = JSON.parse(data); 
+            renderPlaylists(); 
+        }
+    } catch (e) { 
+        console.error(e); 
+    }
 }
 
+// ─── Editar nombres ──────────────────────────────────────────
+
 // ─── Init ────────────────────────────────────────────────────
+loadFromLocalStorage();
 renderPlaylists();
+checkForSharedPlaylist(); // Verificar si hay una playlist compartida en la URL
