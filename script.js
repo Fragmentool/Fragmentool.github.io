@@ -1,6 +1,7 @@
 // ─── Estado global ───────────────────────────────────────────
 let player;
 let currentVideoId = '';
+let currentVideoTitle = ''; // Título del video actual
 let videoDuration = 0;
 let savedPlaylists = [];
 let isPlayerReady = false;
@@ -11,6 +12,7 @@ let isPlayingAll = false;
 let currentPlayingIndex = -1;
 let currentPlayingPlaylistId = null;
 let playInterval = null;
+let autoPlayNext = true; // Por defecto activado
 
 // Estado de edición (fragmento guardado activo)
 let currentEditingPlaylistId = null;
@@ -117,6 +119,7 @@ function loadVideo() {
     }
 
     currentVideoId = videoId;
+    currentVideoTitle = ''; // Resetear título
     stopEverything();
 
     // Restablecer sliders a valores por defecto
@@ -137,6 +140,16 @@ function loadVideo() {
 function onPlayerReady() {
     isPlayerReady = true;
     videoDuration = player.getDuration();
+    
+    // Obtener el título del video usando la API de YouTube
+    try {
+        const iframe = player.getIframe();
+        const videoData = player.getVideoData();
+        currentVideoTitle = videoData.title || 'Video de YouTube';
+    } catch (e) {
+        currentVideoTitle = 'Video de YouTube';
+    }
+    
     document.getElementById('videoSection').classList.add('active');
     
     document.getElementById('startRange').value = 0;
@@ -145,6 +158,7 @@ function onPlayerReady() {
     document.getElementById('endRange').max = videoDuration;
     
     updateTimeDisplays();
+    updateControlsVisibility();
     showNotification('✅ Video cargado correctamente', 'success');
 }
 
@@ -152,6 +166,16 @@ function onPlayerStateChange(event) {
     if (event.data === YT.PlayerState.PLAYING) {
         videoDuration = player.getDuration();
         updateRangeMax();
+        
+        // Actualizar título si no lo tenemos
+        if (!currentVideoTitle || currentVideoTitle === 'Video de YouTube') {
+            try {
+                const videoData = player.getVideoData();
+                currentVideoTitle = videoData.title || 'Video de YouTube';
+            } catch (e) {
+                currentVideoTitle = 'Video de YouTube';
+            }
+        }
     }
     if (event.data === YT.PlayerState.BUFFERING || event.data === YT.PlayerState.CUED) {
         setTimeout(() => { 
@@ -317,9 +341,15 @@ function togglePlayPause() {
     // CRÍTICO: Si estamos en modo playlist, NO permitir pausa manual
     // Solo permitir pausa cuando NO estamos reproduciendo una playlist
     if (isPlayingAll) {
-        // Detener completamente la reproducción de la playlist
-        stopEverything();
-        player.pauseVideo();
+        // Si está reproduciendo, pausar
+        if (state === YT.PlayerState.PLAYING) {
+            player.pauseVideo();
+        } else {
+            // Si está pausado, reanudar desde donde estaba
+            player.playVideo();
+        }
+        // NO llamar updateTransportButtons aquí para no cambiar controles
+        updatePlayPauseIcon();
         return;
     }
     
@@ -364,6 +394,49 @@ function playNext() {
     playClipFromPlaylist(currentPlayingPlaylistId, currentPlayingIndex);
 }
 
+function toggleAutoPlay() {
+    autoPlayNext = !autoPlayNext;
+    updateAutoPlayButton();
+    if (autoPlayNext) {
+        showNotification('🔄 Reproducción automática activada', 'success', 1500);
+    } else {
+        showNotification('⏸️ Reproducción automática desactivada', 'success', 1500);
+    }
+}
+
+function updateAutoPlayButton() {
+    const btn = document.getElementById('autoPlayBtn');
+    if (!btn) return;
+    
+    if (autoPlayNext) {
+        btn.innerHTML = '🔄';
+        btn.title = 'Reproducción automática activada - Click para desactivar';
+        btn.classList.add('active');
+    } else {
+        btn.innerHTML = '⏸️';
+        btn.title = 'Reproducción automática desactivada - Click para activar';
+        btn.classList.remove('active');
+    }
+}
+
+function updateControlsVisibility() {
+    const guardarBtn = document.querySelector('.btn-guardar');
+    const autoPlayBtn = document.getElementById('autoPlayBtn');
+    
+    if (isPlayingAll) {
+        // Modo playlist: ocultar guardar, mostrar autoplay
+        if (guardarBtn) guardarBtn.style.display = 'none';
+        if (autoPlayBtn) {
+            autoPlayBtn.style.display = 'flex';
+            updateAutoPlayButton();
+        }
+    } else {
+        // Modo normal: mostrar guardar, ocultar autoplay
+        if (guardarBtn) guardarBtn.style.display = 'block';
+        if (autoPlayBtn) autoPlayBtn.style.display = 'none';
+    }
+}
+
 function updateTransportButtons() {
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
@@ -375,6 +448,8 @@ function updateTransportButtons() {
         prevBtn.classList.remove('active');
         nextBtn.classList.remove('active');
     }
+    
+    updateControlsVisibility();
 }
 
 // ─── Guardar fragmento ───────────────────────────────────────
@@ -392,12 +467,15 @@ function openSaveClipModal() {
         return;
     }
 
+    // Crear nombre significativo: título del video + marca de tiempo
+    const clipName = `${currentVideoTitle} [${formatTime(s)}-${formatTime(e)}]`;
+
     pendingClip = {
         videoId: currentVideoId,
         startTime: s,
         endTime: e,
         duration: e - s,
-        name: `Fragmento ${formatTime(s)} - ${formatTime(e)}`
+        name: clipName
     };
 
     const select = document.getElementById('playlistSelect');
@@ -409,6 +487,7 @@ function openSaveClipModal() {
         select.appendChild(opt);
     });
 
+    // Preseleccionar la playlist más reciente modificada
     if (lastModifiedPlaylistId) {
         select.value = lastModifiedPlaylistId;
     }
@@ -422,6 +501,7 @@ function closeSaveClipModal() {
 }
 
 function showCreateFromSaveModal() {
+    // No cerrar el modal de guardar, solo abrir el modal de crear por encima
     showCreatePlaylistModal();
 }
 
@@ -450,10 +530,15 @@ function saveClipToPlaylist() {
 function showCreatePlaylistModal() {
     document.getElementById('newPlaylistName').value = '';
     document.getElementById('createPlaylistModal').classList.add('show');
+    // Enfocar el input después de que el modal se muestre
+    setTimeout(() => {
+        document.getElementById('newPlaylistName').focus();
+    }, 100);
 }
 
 function closeCreatePlaylistModal() {
     document.getElementById('createPlaylistModal').classList.remove('show');
+    document.getElementById('newPlaylistName').value = '';
 }
 
 function createNewPlaylist() {
@@ -481,7 +566,8 @@ function createNewPlaylist() {
     closeCreatePlaylistModal();
 
     if (hasPending) {
-        document.getElementById('saveClipModal').classList.remove('show');
+        // Cerrar también el modal de guardar
+        closeSaveClipModal();
         showNotification(`✅ Playlist "${name}" creada con el fragmento`, 'success');
         pendingClip = null;
     } else {
@@ -597,13 +683,21 @@ function startPlayInterval(clip) {
         if (currentTime >= clip.endTime) {
             clearInterval(playInterval);
             playInterval = null;
-            currentPlayingIndex++;
             
-            setTimeout(() => {
-                if (isPlayingAll) {
-                    playClipFromPlaylist(currentPlayingPlaylistId, currentPlayingIndex);
-                }
-            }, 500);
+            // Solo avanzar automáticamente si autoPlayNext está activado
+            if (autoPlayNext) {
+                currentPlayingIndex++;
+                
+                setTimeout(() => {
+                    if (isPlayingAll) {
+                        playClipFromPlaylist(currentPlayingPlaylistId, currentPlayingIndex);
+                    }
+                }, 500);
+            } else {
+                // Detener la reproducción
+                player.pauseVideo();
+                showNotification('⏸️ Reproducción pausada - Activa la reproducción automática o usa ⮞', 'success', 2500);
+            }
         }
     }, 100);
 }
@@ -691,9 +785,21 @@ function startSingleClipInterval(clip) {
         if (currentTime >= clip.endTime) {
             clearInterval(playInterval);
             playInterval = null;
-            player.pauseVideo();
-            isPlayingAll = false;
-            updateTransportButtons();
+            
+            // Comportamiento igual que startPlayInterval - respetar autoPlayNext
+            if (autoPlayNext) {
+                currentPlayingIndex++;
+                
+                setTimeout(() => {
+                    if (isPlayingAll) {
+                        playClipFromPlaylist(currentPlayingPlaylistId, currentPlayingIndex);
+                    }
+                }, 500);
+            } else {
+                // Detener la reproducción
+                player.pauseVideo();
+                showNotification('⏸️ Reproducción pausada - Activa la reproducción automática o usa ⮞', 'success', 2500);
+            }
         }
     }, 100);
 }
@@ -932,9 +1038,10 @@ function generatePlaylistsHTML() {
                             <span class="drag-handle" title="Arrastrar para reordenar">⋮⋮</span>
                             <span class="clip-name"
                                 ondblclick="editClipName(${pl.id}, ${i})"
-                                title="Doble clic para editar">${clip.name || 'FRAGMENTO'}</span>
+                                title="${clip.name || 'FRAGMENTO'}">${clip.name || 'FRAGMENTO'}</span>
                             <div class="clip-actions-mini">
                                 <button class="btn-play-clip" onclick="playClipDirect(${pl.id}, ${i})" title="Reproducir">▶</button>
+                                <button class="btn-clone-clip" onclick="cloneClip(${pl.id}, ${i})" title="Clonar">📋</button>
                                 <button class="btn-delete-clip" onclick="deleteClip(${pl.id}, ${i})" title="Eliminar">🗑</button>
                             </div>
                         </div>`).join('')}
@@ -1021,6 +1128,26 @@ function loadFromLocalStorage() {
     } catch (e) { 
         console.error(e); 
     }
+}
+
+function cloneClip(playlistId, clipIndex) {
+    const pl = savedPlaylists.find(p => p.id === playlistId);
+    if (!pl) return;
+    const clip = pl.clips[clipIndex];
+    if (!clip) return;
+    
+    // Crear copia del fragmento
+    const clonedClip = {
+        ...clip,
+        name: `${clip.name} (copia)`
+    };
+    
+    // Insertar después del fragmento original
+    pl.clips.splice(clipIndex + 1, 0, clonedClip);
+    
+    saveToLocalStorage();
+    renderPlaylists();
+    showNotification('✅ Fragmento clonado', 'success');
 }
 
 // ─── Editar nombres ──────────────────────────────────────────
