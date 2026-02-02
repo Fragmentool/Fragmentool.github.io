@@ -621,6 +621,7 @@ function playClipFromPlaylist(playlistId, clipIndex) {
 
     if (needsVideoSwitch) {
         currentVideoId = clip.videoId;
+        currentVideoTitle = ''; // Resetear título
         
         player.loadVideoById({
             videoId: clip.videoId,
@@ -631,6 +632,14 @@ function playClipFromPlaylist(playlistId, clipIndex) {
             const state = player.getPlayerState();
             if (state === YT.PlayerState.PLAYING || state === YT.PlayerState.BUFFERING) {
                 clearInterval(checkPlaying);
+                
+                // Obtener título del nuevo video
+                try {
+                    const videoData = player.getVideoData();
+                    currentVideoTitle = videoData.title || 'Video de YouTube';
+                } catch (e) {
+                    currentVideoTitle = 'Video de YouTube';
+                }
                 
                 setTimeout(() => {
                     videoDuration = player.getDuration();
@@ -727,6 +736,7 @@ function playClipDirect(playlistId, clipIndex) {
 
     if (needsVideoSwitch) {
         currentVideoId = clip.videoId;
+        currentVideoTitle = ''; // Resetear título
         
         player.loadVideoById({
             videoId: clip.videoId,
@@ -737,6 +747,15 @@ function playClipDirect(playlistId, clipIndex) {
             const state = player.getPlayerState();
             if (state === YT.PlayerState.PLAYING || state === YT.PlayerState.BUFFERING) {
                 clearInterval(checkPlaying);
+                
+                // Obtener título del nuevo video
+                try {
+                    const videoData = player.getVideoData();
+                    currentVideoTitle = videoData.title || 'Video de YouTube';
+                } catch (e) {
+                    currentVideoTitle = 'Video de YouTube';
+                }
+                
                 setTimeout(() => {
                     videoDuration = player.getDuration();
                     updateUIForClip(clip);
@@ -832,27 +851,45 @@ function sharePlaylist(playlistId) {
     const playlist = savedPlaylists.find(p => p.id === playlistId);
     if (!playlist) return;
 
-    // Crear objeto con datos de la playlist
+    // Validar que la playlist tenga fragmentos
+    if (playlist.clips.length === 0) {
+        showNotification('No puedes compartir una playlist vacía', 'error', 3000);
+        return;
+    }
+
+    // Crear objeto con datos de la playlist - asegurar todos los campos
     const shareData = {
         name: playlist.name,
         clips: playlist.clips.map(clip => ({
-            videoId: clip.videoId,
-            startTime: clip.startTime,
-            endTime: clip.endTime,
-            name: clip.name
+            videoId: clip.videoId || '',
+            startTime: clip.startTime || 0,
+            endTime: clip.endTime || 0,
+            name: clip.name || 'Fragmento'
         }))
     };
 
-    // Comprimir datos a base64
-    const jsonString = JSON.stringify(shareData);
-    const base64Data = btoa(encodeURIComponent(jsonString));
-    
-    // Crear URL con los datos
-    const shareUrl = `${window.location.origin}${window.location.pathname}?playlist=${base64Data}`;
-    
-    // Mostrar en modal
-    document.getElementById('shareUrlInput').value = shareUrl;
-    document.getElementById('sharePlaylistModal').classList.add('show');
+    // Validar que todos los clips tengan videoId
+    const invalidClips = shareData.clips.filter(c => !c.videoId);
+    if (invalidClips.length > 0) {
+        showNotification('Algunos fragmentos no tienen video asociado', 'error', 3000);
+        return;
+    }
+
+    try {
+        // Comprimir datos a base64
+        const jsonString = JSON.stringify(shareData);
+        const base64Data = btoa(encodeURIComponent(jsonString));
+        
+        // Crear URL con los datos
+        const shareUrl = `${window.location.origin}${window.location.pathname}?playlist=${base64Data}`;
+        
+        // Mostrar en modal
+        document.getElementById('shareUrlInput').value = shareUrl;
+        document.getElementById('sharePlaylistModal').classList.add('show');
+    } catch (error) {
+        console.error('Error al crear enlace:', error);
+        showNotification('Error al generar el enlace de compartir', 'error', 3000);
+    }
 }
 
 function closeSharePlaylistModal() {
@@ -898,17 +935,16 @@ function checkForSharedPlaylist() {
             const jsonString = decodeURIComponent(atob(playlistData));
             const shareData = JSON.parse(jsonString);
             
-            // Verificar que no existe una playlist con el mismo nombre y contenido
-            const exists = savedPlaylists.some(p => 
-                p.name === shareData.name && 
-                p.clips.length === shareData.clips.length
-            );
+            // Verificar que los datos sean válidos
+            if (!shareData.name || !Array.isArray(shareData.clips)) {
+                throw new Error('Datos de playlist inválidos');
+            }
             
-            if (exists) {
-                if (confirm(`Ya tienes una playlist llamada "${shareData.name}". ¿Quieres importar esta de todas formas?`)) {
-                    importSharedPlaylist(shareData);
-                }
-            } else {
+            // Mostrar confirmación para importar
+            const clipCount = shareData.clips.length;
+            const message = `¿Quieres importar la playlist "${shareData.name}" con ${clipCount} fragmento${clipCount !== 1 ? 's' : ''}?`;
+            
+            if (confirm(message)) {
                 importSharedPlaylist(shareData);
             }
             
@@ -918,18 +954,32 @@ function checkForSharedPlaylist() {
         } catch (error) {
             console.error('Error al importar playlist:', error);
             showNotification('Error al importar la playlist compartida', 'error', 3000);
+            // Limpiar URL incluso si hay error
+            window.history.replaceState({}, document.title, window.location.pathname);
         }
     }
 }
 
 function importSharedPlaylist(shareData) {
+    // Verificar que cada clip tenga todos los campos necesarios
+    const validClips = shareData.clips.map(clip => {
+        if (!clip.videoId || clip.startTime === undefined || clip.endTime === undefined) {
+            throw new Error('Datos de fragmento incompletos');
+        }
+        
+        return {
+            videoId: clip.videoId,
+            startTime: parseFloat(clip.startTime),
+            endTime: parseFloat(clip.endTime),
+            duration: parseFloat(clip.endTime) - parseFloat(clip.startTime),
+            name: clip.name || `Fragmento ${formatTime(clip.startTime)} - ${formatTime(clip.endTime)}`
+        };
+    });
+    
     const newPlaylist = {
         id: Date.now(),
         name: shareData.name,
-        clips: shareData.clips.map(clip => ({
-            ...clip,
-            duration: clip.endTime - clip.startTime
-        })),
+        clips: validClips,
         createdAt: new Date().toISOString(),
         expanded: false
     };
@@ -938,7 +988,7 @@ function importSharedPlaylist(shareData) {
     saveToLocalStorage();
     renderPlaylists();
     
-    showNotification(`✅ Playlist "${shareData.name}" importada con ${shareData.clips.length} fragmentos`, 'success', 3000);
+    showNotification(`✅ Playlist "${shareData.name}" importada con ${validClips.length} fragmentos`, 'success', 3000);
 }
 function editPlaylistName(playlistId) {
     const pl = savedPlaylists.find(p => p.id === playlistId);
