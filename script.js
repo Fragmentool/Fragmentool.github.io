@@ -582,11 +582,32 @@ function playPlaylist(playlistId) {
         showNotification('La playlist está vacía', 'error', 3000); 
         return; 
     }
+    
+    // Asegurarse de que hay un video cargado o cargar el primero
     if (!player || !isPlayerReady) { 
-        showNotification('Primero carga un video', 'error', 3000); 
-        return; 
+        // Si no hay player, cargar el primer video de la playlist
+        const firstClip = playlist.clips[0];
+        if (!firstClip) return;
+        
+        // Cargar el video
+        const urlInput = document.getElementById('videoUrl');
+        urlInput.value = `https://www.youtube.com/watch?v=${firstClip.videoId}`;
+        loadVideo();
+        
+        // Esperar a que el video se cargue
+        setTimeout(() => {
+            if (isPlayerReady) {
+                isPlayingAll = true;
+                currentPlayingIndex = 0;
+                currentPlayingPlaylistId = playlistId;
+                renderPlaylists();
+                updateTransportButtons();
+                playClipFromPlaylist(playlistId, 0);
+            }
+        }, 2000);
+        return;
     }
-
+    
     stopEverything();
     isPlayingAll = true;
     currentPlayingIndex = 0;
@@ -892,13 +913,6 @@ function sharePlaylist(playlistId) {
     }
 }
 
-
-
-
-
-
-
-
 function closeSharePlaylistModal() {
     document.getElementById('sharePlaylistModal').classList.remove('show');
 }
@@ -952,11 +966,18 @@ function checkForSharedPlaylist() {
             const message = `¿Quieres importar la playlist "${shareData.name}" con ${clipCount} fragmento${clipCount !== 1 ? 's' : ''}?`;
             
             if (confirm(message)) {
-                importSharedPlaylist(shareData);
+                const newPlaylistId = importSharedPlaylist(shareData);
+                
+                // Reproducir automáticamente después de importar
+                setTimeout(() => {
+                    if (newPlaylistId) {
+                        playPlaylist(newPlaylistId);
+                    }
+                }, 1000);
             }
             
             // Limpiar URL
-            window.history.replaceState({}, document.title, location.pathname);
+            window.history.replaceState({}, document.title, window.location.pathname);
             
         } catch (error) {
             console.error('Error al importar playlist:', error);
@@ -968,44 +989,38 @@ function checkForSharedPlaylist() {
 }
 
 function importSharedPlaylist(shareData) {
-    savedPlaylists = savedPlaylists.filter(
-        p => p.name !== shareData.name
-    );
-
-    const clips = shareData.clips.map(c => ({
-        videoId: c.videoId,
-        startTime: +c.startTime,
-        endTime: +c.endTime,
-        duration: +c.endTime - +c.startTime,
-        name: c.name
-    }));
-
+    // Verificar que cada clip tenga todos los campos necesarios
+    const validClips = shareData.clips.map(clip => {
+        if (!clip.videoId || clip.startTime === undefined || clip.endTime === undefined) {
+            throw new Error('Datos de fragmento incompletos');
+        }
+        
+        return {
+            videoId: clip.videoId,
+            startTime: parseFloat(clip.startTime),
+            endTime: parseFloat(clip.endTime),
+            duration: parseFloat(clip.endTime) - parseFloat(clip.startTime),
+            name: clip.name || `Fragmento ${formatTime(clip.startTime)} - ${formatTime(clip.endTime)}`
+        };
+    });
+    
     const newPlaylist = {
         id: Date.now(),
         name: shareData.name,
-        clips,
-        expanded: true
+        clips: validClips,
+        createdAt: new Date().toISOString(),
+        expanded: false
     };
-
+    
     savedPlaylists.push(newPlaylist);
     saveToLocalStorage();
     renderPlaylists();
-
-    showNotification(`✅ Playlist "${newPlaylist.name}" importada`, 'success', 3000);
-
-    waitForPlayerAndPlay(newPlaylist.id);
-
+    
+    showNotification(`✅ Playlist "${shareData.name}" importada con ${validClips.length} fragmentos`, 'success', 3000);
+    
+    // DEVUELVE EL ID DE LA NUEVA PLAYLIST
+    return newPlaylist.id;
 }
-
-function waitForPlayerAndPlay(playlistId) {
-    const interval = setInterval(() => {
-        if (player && isPlayerReady) {
-            clearInterval(interval);
-            playPlaylist(playlistId);
-        }
-    }, 200);
-}
-
 
 function editPlaylistName(playlistId) {
     const pl = savedPlaylists.find(p => p.id === playlistId);
@@ -1217,20 +1232,9 @@ function cloneClip(playlistId, clipIndex) {
     showNotification('✅ Fragmento clonado', 'success');
 }
 
-
 // ─── Editar nombres ──────────────────────────────────────────
 
 // ─── Init ────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-    const hasSharedPlaylist =
-        new URLSearchParams(window.location.search).has('playlist') ||
-        new URLSearchParams(window.location.search).has('gist');
-
-    if (!hasSharedPlaylist) {
-        loadFromLocalStorage();
-        renderPlaylists();
-    }
-
-    checkForSharedPlaylist();
-    checkForGistPlaylist();
-});
+//loadFromLocalStorage();
+renderPlaylists();
+checkForSharedPlaylist(); // Verificar si hay una playlist compartida en la URL
