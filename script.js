@@ -892,6 +892,13 @@ function sharePlaylist(playlistId) {
     }
 }
 
+
+
+
+
+
+
+
 function closeSharePlaylistModal() {
     document.getElementById('sharePlaylistModal').classList.remove('show');
 }
@@ -961,35 +968,34 @@ function checkForSharedPlaylist() {
 }
 
 function importSharedPlaylist(shareData) {
-    // Verificar que cada clip tenga todos los campos necesarios
-    const validClips = shareData.clips.map(clip => {
-        if (!clip.videoId || clip.startTime === undefined || clip.endTime === undefined) {
-            throw new Error('Datos de fragmento incompletos');
-        }
-        
-        return {
-            videoId: clip.videoId,
-            startTime: parseFloat(clip.startTime),
-            endTime: parseFloat(clip.endTime),
-            duration: parseFloat(clip.endTime) - parseFloat(clip.startTime),
-            name: clip.name || `Fragmento ${formatTime(clip.startTime)} - ${formatTime(clip.endTime)}`
-        };
-    });
-    
+    const validClips = shareData.clips.map(clip => ({
+        videoId: clip.videoId,
+        startTime: parseFloat(clip.startTime),
+        endTime: parseFloat(clip.endTime),
+        duration: parseFloat(clip.endTime) - parseFloat(clip.startTime),
+        name: clip.name || `Fragmento ${formatTime(clip.startTime)} - ${formatTime(clip.endTime)}`
+    }));
+
     const newPlaylist = {
         id: Date.now(),
         name: shareData.name,
         clips: validClips,
         createdAt: new Date().toISOString(),
-        expanded: false
+        expanded: true
     };
-    
+
     savedPlaylists.push(newPlaylist);
     saveToLocalStorage();
     renderPlaylists();
-    
-    showNotification(`✅ Playlist "${shareData.name}" importada con ${validClips.length} fragmentos`, 'success', 3000);
+
+    showNotification(`✅ Playlist "${shareData.name}" importada`, 'success', 3000);
+
+    // 🔥 CLAVE: cargar el primer fragmento automáticamente
+    setTimeout(() => {
+        playClipDirect(newPlaylist.id, 0);
+    }, 500);
 }
+
 function editPlaylistName(playlistId) {
     const pl = savedPlaylists.find(p => p.id === playlistId);
     if (!pl) return;
@@ -1199,6 +1205,7 @@ function cloneClip(playlistId, clipIndex) {
     renderPlaylists();
     showNotification('✅ Fragmento clonado', 'success');
 }
+
 
 // ─── Editar nombres ──────────────────────────────────────────
 
