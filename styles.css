@@ -1032,7 +1032,7 @@ input[type="range"]::-moz-range-thumb {
     .main-layout {
         flex-direction: column;
         height: auto;
-        min-height: calc(100vh - 120px);
+        min-height: auto;
     }
 
     /* Ocultar sidebar desktop */
@@ -1052,16 +1052,37 @@ input[type="range"]::-moz-range-thumb {
     .main-area {
         padding: 15px;
         min-height: auto;
+        flex: none;
+    }
+
+    .video-section.active {
+        display: flex;
+        flex-direction: column;
+        height: auto;
     }
 
     .video-wrapper {
-        max-height: calc(100% - 250px);
-        min-height: 180px;
+        position: relative;
+        width: 100%;
+        padding-bottom: 56.25%; /* Volver a ratio 16:9 en móvil */
+        height: 0;
+        max-height: none;
+        min-height: auto;
         margin-bottom: 10px;
+        flex: none;
+    }
+
+    .video-wrapper iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
     }
 
     .controls {
         padding: 10px;
+        width: 100%;
     }
 
     .notification-indicator {
@@ -1168,6 +1189,31 @@ input[type="range"]::-moz-range-thumb {
 
     .range-container {
         margin-bottom: 6px;
+        height: 24px; /* Más alto para dedos */
+    }
+
+    .range-track {
+        height: 12px; /* Más grueso */
+        top: 6px;
+    }
+
+    .range-selection {
+        height: 12px;
+        top: 6px;
+    }
+
+    input[type="range"] {
+        height: 24px;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+        width: 24px;
+        height: 24px;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+        width: 24px;
+        height: 24px;
     }
 
     .guardar-wrap {
