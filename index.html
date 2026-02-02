@@ -80,6 +80,7 @@
                                 <button class="btn-transport btn-prev" id="prevBtn" onclick="playPrevious()" title="Anterior">⮜</button>
                                 <button class="btn-transport btn-playpause" id="playPauseBtn" onclick="togglePlayPause()" title="Reproducir / Pausar">▶</button>
                                 <button class="btn-transport btn-next" id="nextBtn" onclick="playNext()" title="Siguiente">⮞</button>
+                                <button class="btn-transport btn-autoplay active" id="autoPlayBtn" onclick="toggleAutoPlay()" title="Reproducción automática activada" style="display: none;">🔄</button>
                             </div>
 
                             <div class="guardar-wrap">
@@ -117,6 +118,7 @@
                             id="newPlaylistName" 
                             placeholder="Nombre de la nueva playlist"
                             maxlength="50"
+                            onkeydown="if(event.key==='Enter') createNewPlaylist()"
                         >
                     </div>
                     <div class="modal-footer">
