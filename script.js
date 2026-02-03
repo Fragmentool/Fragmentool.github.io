@@ -11,6 +11,7 @@ let lastModifiedPlaylistId = null;
 let isPlayingAll = false;
 let currentPlayingIndex = -1;
 let currentPlayingPlaylistId = null;
+let currentPlayingClipId = null; // ID único del clip que se está reproduciendo
 let playInterval = null;
 let autoPlayNext = true; // Por defecto activado
 
@@ -517,6 +518,9 @@ function saveClipToPlaylist() {
     const playlist = savedPlaylists.find(p => p.id === id);
     if (!playlist) return;
 
+    // Agregar ID único al clip
+    pendingClip.clipId = Date.now() + Math.random(); // ID único para el clip
+    
     playlist.clips.push(pendingClip);
     lastModifiedPlaylistId = id;
     saveToLocalStorage();
@@ -549,6 +553,12 @@ function createNewPlaylist() {
     }
 
     const hasPending = pendingClip !== null;
+    
+    // Si hay un clip pendiente, agregar ID único
+    if (hasPending && !pendingClip.clipId) {
+        pendingClip.clipId = Date.now() + Math.random();
+    }
+    
     const newPl = {
         id: Date.now(), 
         name,
@@ -623,9 +633,17 @@ function playClipFromPlaylist(playlistId, clipIndex) {
 
     if (clipIndex >= playlist.clips.length) clipIndex = 0;
     if (clipIndex < 0) clipIndex = playlist.clips.length - 1;
-    currentPlayingIndex = clipIndex;
-
+    
     const clip = playlist.clips[clipIndex];
+    
+    // Resetear el progreso del fragmento anterior antes de cambiar
+    if (currentPlayingClipId !== null && currentPlayingClipId !== clip.clipId) {
+        const oldClipElements = document.querySelectorAll(`[data-clip-id="${currentPlayingClipId}"]`);
+        oldClipElements.forEach(el => el.style.setProperty('--clip-progress', '0%'));
+    }
+    
+    currentPlayingIndex = clipIndex;
+    currentPlayingClipId = clip.clipId; // Asignar el ID del clip actual
 
     currentEditingPlaylistId = playlistId;
     currentEditingClipIndex  = clipIndex;
@@ -700,6 +718,7 @@ function startPlayInterval(clip) {
         if (!isPlayingAll) {
             clearInterval(playInterval);
             playInterval = null;
+            updateClipProgress(0); // Resetear progreso
             return;
         }
         
@@ -710,9 +729,15 @@ function startPlayInterval(clip) {
         }
         
         const currentTime = player.getCurrentTime();
+        
+        // Actualizar barra de progreso del fragmento actual
+        const progress = ((currentTime - clip.startTime) / clip.duration) * 100;
+        updateClipProgress(Math.min(Math.max(progress, 0), 100));
+        
         if (currentTime >= clip.endTime) {
             clearInterval(playInterval);
             playInterval = null;
+            updateClipProgress(100); // Completar al 100%
             
             // Solo avanzar automáticamente si autoPlayNext está activado
             if (autoPlayNext) {
@@ -732,6 +757,20 @@ function startPlayInterval(clip) {
     }, 100);
 }
 
+// Función para actualizar el progreso visual del fragmento
+function updateClipProgress(percentage) {
+    if (currentPlayingClipId === null) return;
+    
+    // Buscar el elemento del clip actual por su ID único
+    const clipElements = document.querySelectorAll(
+        `[data-clip-id="${currentPlayingClipId}"]`
+    );
+    
+    clipElements.forEach(clipElement => {
+        clipElement.style.setProperty('--clip-progress', `${percentage}%`);
+    });
+}
+
 function playClipDirect(playlistId, clipIndex) {
     const playlist = savedPlaylists.find(p => p.id === playlistId);
     if (!playlist) return;
@@ -745,6 +784,7 @@ function playClipDirect(playlistId, clipIndex) {
     isPlayingAll = true;
     currentPlayingIndex = clipIndex;
     currentPlayingPlaylistId = playlistId;
+    currentPlayingClipId = clip.clipId; // Asignar el ID del clip actual
 
     currentEditingPlaylistId = playlistId;
     currentEditingClipIndex  = clipIndex;
@@ -813,6 +853,7 @@ function startSingleClipInterval(clip) {
         if (!isPlayingAll) {
             clearInterval(playInterval);
             playInterval = null;
+            updateClipProgress(0); // Resetear progreso
             return;
         }
         
@@ -822,9 +863,15 @@ function startSingleClipInterval(clip) {
         }
         
         const currentTime = player.getCurrentTime();
+        
+        // Actualizar barra de progreso del fragmento actual
+        const progress = ((currentTime - clip.startTime) / clip.duration) * 100;
+        updateClipProgress(Math.min(Math.max(progress, 0), 100));
+        
         if (currentTime >= clip.endTime) {
             clearInterval(playInterval);
             playInterval = null;
+            updateClipProgress(100); // Completar al 100%
             
             // Comportamiento igual que startPlayInterval - respetar autoPlayNext
             if (autoPlayNext) {
@@ -849,6 +896,7 @@ function stopEverything() {
     isPlayingAll = false;
     currentPlayingIndex = -1;
     currentPlayingPlaylistId = null;
+    currentPlayingClipId = null; // Resetear el ID del clip actual
     currentEditingPlaylistId = null;
     currentEditingClipIndex  = null;
 
@@ -862,9 +910,20 @@ function stopEverything() {
     }
     if (player && isPlayerReady) player.pauseVideo();
 
+    // Resetear todos los progresos visuales
+    resetAllClipsProgress();
+    
     hideNotification();
     updateTransportButtons();
     renderPlaylists();
+}
+
+// Función para resetear el progreso de todos los fragmentos
+function resetAllClipsProgress() {
+    const allClips = document.querySelectorAll('.clip-item-mini');
+    allClips.forEach(clip => {
+        clip.style.setProperty('--clip-progress', '0%');
+    });
 }
 
 // ─── Compartir playlists ─────────────────────────────────────
@@ -990,7 +1049,7 @@ function checkForSharedPlaylist() {
 
 function importSharedPlaylist(shareData) {
     // Verificar que cada clip tenga todos los campos necesarios
-    const validClips = shareData.clips.map(clip => {
+    const validClips = shareData.clips.map((clip, index) => {
         if (!clip.videoId || clip.startTime === undefined || clip.endTime === undefined) {
             throw new Error('Datos de fragmento incompletos');
         }
@@ -1000,7 +1059,8 @@ function importSharedPlaylist(shareData) {
             startTime: parseFloat(clip.startTime),
             endTime: parseFloat(clip.endTime),
             duration: parseFloat(clip.endTime) - parseFloat(clip.startTime),
-            name: clip.name || `Fragmento ${formatTime(clip.startTime)} - ${formatTime(clip.endTime)}`
+            name: clip.name || `Fragmento ${formatTime(clip.startTime)} - ${formatTime(clip.endTime)}`,
+            clipId: Date.now() + Math.random() + index // ID único para cada clip
         };
     });
     
@@ -1106,11 +1166,17 @@ function generatePlaylistsHTML() {
             <div class="playlist-clips ${pl.expanded ? 'expanded' : ''}" id="clips-${pl.id}">
                 ${pl.clips.length === 0
                     ? '<p style="padding:10px;text-align:center;color:#999;">No hay fragmentos</p>'
-                    : pl.clips.map((clip, i) => `
+                    : pl.clips.map((clip, i) => {
+                        // Asegurar que el clip tenga un ID único
+                        if (!clip.clipId) {
+                            clip.clipId = Date.now() + Math.random() + i;
+                        }
+                        return `
                         <div class="clip-item-mini"
                             draggable="true"
                             data-playlist-id="${pl.id}"
                             data-clip-index="${i}"
+                            data-clip-id="${clip.clipId}"
                             ondragstart="handleDragStart(event)"
                             ondragover="handleDragOver(event)"
                             ondragenter="handleDragEnter(event)"
@@ -1126,7 +1192,8 @@ function generatePlaylistsHTML() {
                                 <button class="btn-clone-clip" onclick="cloneClip(${pl.id}, ${i})" title="Clonar">📋</button>
                                 <button class="btn-delete-clip" onclick="deleteClip(${pl.id}, ${i})" title="Eliminar">🗑</button>
                             </div>
-                        </div>`).join('')}
+                        </div>`;
+                    }).join('')}
             </div>
         </div>
     `).join('');
@@ -1218,10 +1285,11 @@ function cloneClip(playlistId, clipIndex) {
     const clip = pl.clips[clipIndex];
     if (!clip) return;
     
-    // Crear copia del fragmento
+    // Crear copia del fragmento con un nuevo ID único
     const clonedClip = {
         ...clip,
-        name: `${clip.name} (copia)`
+        name: `${clip.name} (copia)`,
+        clipId: Date.now() + Math.random() // Nuevo ID único para el clon
     };
     
     // Insertar después del fragmento original
@@ -1235,6 +1303,6 @@ function cloneClip(playlistId, clipIndex) {
 // ─── Editar nombres ──────────────────────────────────────────
 
 // ─── Init ────────────────────────────────────────────────────
-//loadFromLocalStorage();
+loadFromLocalStorage();
 renderPlaylists();
 checkForSharedPlaylist(); // Verificar si hay una playlist compartida en la URL
