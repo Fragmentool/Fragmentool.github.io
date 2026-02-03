@@ -1,35 +1,130 @@
-/* ─── Variables de tema ─── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   🎨 PALETA DE COLORES - MODO CLARO
+   ═══════════════════════════════════════════════════════════════════════════
+   
+   INSTRUCCIONES: Para cambiar los colores de toda la aplicación, simplemente
+   modifica los valores hexadecimales (#RRGGBB) en esta sección.
+   
+   ─────────────────────────────────────────────────────────────────────────── */
+
 :root {
-    --bg-gradient-start: #508650;
-    --bg-gradient-end: #306b4b;
-    --container-bg: #ffffff;
-    --text-primary: #333333;
-    --text-secondary: #666666;
-    --border-color: #e0e0e0;
-    --input-bg: #ffffff;
-    --sidebar-bg: #f8f9fa;
-    --control-bg: #f8f9fa;
-    --time-value-bg: #ffffff;
-    --modal-bg: #ffffff;
-    --playlist-item-bg: #ffffff;
-    --clip-item-bg: #f8f9fa;
+    /* ─── Gradiente Principal (Header y Botones) ─── */
+    --bg-gradient-start: #508650;        /* Verde medio - inicio del gradiente */
+    --bg-gradient-end: #306b4b;          /* Verde oscuro - fin del gradiente */
+    
+    /* ─── Gradiente Secundario (Botones Hover) ─── */
+    --secondary-gradient-start: #508650; /* Verde medio */
+    --secondary-gradient-end: #054924;   /* Verde muy oscuro */
+    
+    /* ─── Fondos ─── */
+    --container-bg: #ffffff;             /* Fondo principal de la app */
+    --sidebar-bg: #f8f9fa;               /* Fondo del sidebar de playlists */
+    --control-bg: #f8f9fa;               /* Fondo de controles */
+    --input-bg: #ffffff;                 /* Fondo de inputs */
+    --modal-bg: #ffffff;                 /* Fondo de modales */
+    --playlist-item-bg: #ffffff;         /* Fondo de items de playlist */
+    --clip-item-bg: #f8f9fa;             /* Fondo de fragmentos */
+    --time-value-bg: #ffffff;            /* Fondo de valores de tiempo */
+    
+    /* ─── Textos ─── */
+    --text-primary: #333333;             /* Texto principal */
+    --text-secondary: #666666;           /* Texto secundario */
+    
+    /* ─── Bordes y Líneas ─── */
+    --border-color: #e0e0e0;             /* Color de bordes */
+    
+    /* ─── Botones de Acción (Play, Clone, Delete) ─── */
+    --btn-play-start: #11998e;           /* Verde azulado - botón play */
+    --btn-play-end: #38ef7d;             /* Verde claro - botón play */
+    
+    --btn-clone-start: #ffa751;          /* Naranja - botón clonar */
+    --btn-clone-end: #ffe259;            /* Amarillo - botón clonar */
+    
+    --btn-delete-start: #eb3349;         /* Rojo - botón eliminar */
+    --btn-delete-end: #f45c43;           /* Rojo claro - botón eliminar */
+    
+    --btn-share-start: #4facfe;          /* Azul - botón compartir */
+    --btn-share-end: #00f2fe;            /* Cyan - botón compartir */
+    
+    /* ─── Acentos y Highlights ─── */
+    --accent-color: var(--accent-color);             /* Color de acento principal */
+    --focus-color: #11998e;              /* Color de foco/selección */
+    --success-color: #2fd30f;            /* Color de éxito */
+    
+    /* ─── Scrollbar ─── */
+    --scrollbar-track: #e0e0e0;          /* Fondo del scrollbar */
+    --scrollbar-thumb: #999999;          /* Color del thumb del scrollbar */
+    --scrollbar-thumb-hover: #777777;    /* Color del thumb al hover */
+    
+    /* ─── Elementos Deshabilitados ─── */
+    --disabled-bg: #cccccc;              /* Fondo de elementos deshabilitados */
+    
+    /* ─── Sombras ─── */
+    --shadow-light: rgba(0, 0, 0, 0.15);     /* Sombra suave */
+    --shadow-medium: rgba(0, 0, 0, 0.2);     /* Sombra media */
+    --shadow-button: #309e30;   /* Sombra de botones */
+    
+    /* ─── Barra de Progreso del Fragmento ─── */
+    --progress-bar-start: rgba(75, 162, 126, 0.2);  /* Inicio gradiente progreso */
+    --progress-bar-end: rgba(107, 221, 126, 0.397);     /* Fin gradiente progreso */
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   🌙 PALETA DE COLORES - MODO OSCURO
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 [data-theme="dark"] {
-    --bg-gradient-start: #1a1a2e;
-    --bg-gradient-end: #16213e;
-    --container-bg: #0f1419;
-    --text-primary: #e0e0e0;
-    --text-secondary: #a0a0a0;
-    --border-color: #2a2a3e;
-    --input-bg: #1a1a2e;
-    --sidebar-bg: #16213e;
-    --control-bg: #1a1a2e;
-    --time-value-bg: #16213e;
-    --modal-bg: #1a1a2e;
-    --playlist-item-bg: #16213e;
-    --clip-item-bg: #1a1a2e;
+    /* ─── Gradiente Principal (Header y Botones) ─── */
+    --bg-gradient-start: #385338;        /* Azul oscuro - inicio del gradiente */
+    --bg-gradient-end: #30523a;          /* Azul muy oscuro - fin del gradiente */
+    
+    /* ─── Gradiente Secundario (Botones Hover) ─── */
+    --secondary-gradient-start: #508650; /* Verde medio */
+    --secondary-gradient-end: #054924;   /* Verde muy oscuro */
+    
+    /* ─── Fondos ─── */
+    --container-bg: #10190f;             /* Fondo principal de la app */
+    --sidebar-bg: #10190f;               /* Fondo del sidebar de playlists */
+    --control-bg: #273027;               /* Fondo de controles */
+    --input-bg: #28312a;                 /* Fondo de inputs */
+    --modal-bg: #242e25;                 /* Fondo de modales */
+    --playlist-item-bg: #163e16;         /* Fondo de items de playlist */
+    --clip-item-bg: #1a2e1b;             /* Fondo de fragmentos */
+    --time-value-bg: #27382b;            /* Fondo de valores de tiempo */
+    
+    /* ─── Textos ─── */
+    --text-primary: #ffffff;             /* Texto principal */
+    --text-secondary: #a0a0a0;           /* Texto secundario */
+    
+    /* ─── Bordes y Líneas ─── */
+    --border-color: #2a2a3e;             /* Color de bordes */
+    
+    /* Los botones de acción mantienen los mismos colores en modo oscuro */
+    
+    /* ─── Acentos y Highlights ─── */
+    --accent-color: var(--accent-color);             /* Color de acento principal */
+    --focus-color: #11998e;              /* Color de foco/selección */
+    --success-color: #2fd30f;            /* Color de éxito */
+    
+    /* ─── Scrollbar ─── */
+    --scrollbar-track: #10190f;          /* Fondo del scrollbar */
+    --scrollbar-thumb: #999999;          /* Color del thumb del scrollbar */
+    --scrollbar-thumb-hover: #777777;    /* Color del thumb al hover */
+    
+    /* ─── Elementos Deshabilitados ─── */
+    --disabled-bg: #cccccc;              /* Fondo de elementos deshabilitados */
+    
+    /* ─── Sombras ─── */
+    --shadow-light: rgba(0, 0, 0, 0.15);     /* Sombra suave */
+    --shadow-medium: rgba(0, 0, 0, 0.2);     /* Sombra media */
+    --shadow-button: rgba(48, 158, 48, 1);   /* Sombra de botones */
+    
+    /* ─── Barra de Progreso del Fragmento ─── */
+    --progress-bar-start: rgba(75, 162, 126, 0.2);  /* Inicio gradiente progreso (más visible) */
+    --progress-bar-end: rgba(107, 221, 126, 0.397);     /* Fin gradiente progreso (más visible) */
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
 
 * {
     margin: 0;
@@ -143,16 +238,16 @@ body {
 }
 
 .sidebar-playlists::-webkit-scrollbar-track {
-    background: var(--border-color);
+    background: var(--scrollbar-track);
 }
 
 .sidebar-playlists::-webkit-scrollbar-thumb {
-    background: #999;
+    background: var(--scrollbar-thumb);
     border-radius: 4px;
 }
 
 .sidebar-playlists::-webkit-scrollbar-thumb:hover {
-    background: #777;
+    background: var(--scrollbar-thumb-hover);
 }
 
 /* Ocultar playlists móvil en desktop */
@@ -175,16 +270,16 @@ body {
 }
 
 .playlists-mobile .playlists-container::-webkit-scrollbar-track {
-    background: var(--border-color);
+    background: var(--scrollbar-track);
 }
 
 .playlists-mobile .playlists-container::-webkit-scrollbar-thumb {
-    background: #999;
+    background: var(--scrollbar-thumb);
     border-radius: 4px;
 }
 
 .playlists-mobile .playlists-container::-webkit-scrollbar-thumb:hover {
-    background: #777;
+    background: var(--scrollbar-thumb-hover);
 }
 
 .main-area {
@@ -227,12 +322,12 @@ input[type="text"] {
 
 input[type="text"]:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: var(--accent-color);
 }
 
 button {
     padding: 15px 30px;
-    background: linear-gradient(135deg, #508650 0%, #306b4b 100%);
+    background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
     color: white;
     border: none;
     border-radius: 10px;
@@ -244,7 +339,7 @@ button {
 
 button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgb(48, 158, 48);
+    box-shadow: 0 5px 15px var(--shadow-button);
 }
 
 button:active {
@@ -252,7 +347,7 @@ button:active {
 }
 
 button:disabled {
-    background: #cccccc;
+    background: var(--disabled-bg);
     cursor: not-allowed;
     transform: none;
 }
@@ -301,7 +396,7 @@ button:disabled {
 
 /* Indicador de notificaciones unificado - siempre visible */
 .notification-indicator {
-    background: linear-gradient(135deg, #508650 0%, #306b4b 100%);
+    background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
     color: white;
     padding: 8px 12px;
     border-radius: 8px;
@@ -309,7 +404,7 @@ button:disabled {
     margin-bottom: 10px;
     font-weight: 500;
     font-size: 13px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 2px 8px var(--shadow-light);
     min-height: 36px;
     display: flex;
     align-items: center;
@@ -324,12 +419,12 @@ button:disabled {
 }
 
 .notification-indicator.success {
-    background: linear-gradient(135deg, #508650 0%, #306b4b 100%);
+    background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
     animation: slideDown 0.3s ease-in;
 }
 
 .notification-indicator.editing {
-    background: linear-gradient(135deg, #508650 0%, #306b4b 100%);
+    background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
     animation: slideDown 0.3s ease-in;
 }
 
@@ -381,10 +476,10 @@ button:disabled {
     border-radius: 5px;
     font-family: monospace;
     font-size: 13px;
-    color: #667eea;
+    color: var(--accent-color);
     border: 1px solid var(--border-color);
     transition:0.3s ease, border-color 0.3s ease;
-    background-color: #1a1a2e;
+    background-color: var(--input-bg);
 } 
     
 
@@ -409,7 +504,7 @@ button:disabled {
     position: absolute;
     top: 2px;
     height: 10px;
-    background: linear-gradient(135deg, #508650 0%, #306b4b 100%);
+    background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
     border-radius: 5px;
     transition: all 0.1s;
 }
@@ -429,11 +524,11 @@ input[type="range"]::-webkit-slider-thumb {
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    background: white;
-    border: 3px solid #667eea;
+    background: #ffffff;
+    border: 3px solid #6daa67;
     cursor: pointer;
     pointer-events: auto;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 5px var(--shadow-medium);
 }
 
 input[type="range"]::-moz-range-thumb {
@@ -441,10 +536,10 @@ input[type="range"]::-moz-range-thumb {
     height: 20px;
     border-radius: 50%;
     background: white;
-    border: 3px solid #667eea;
+    border: 3px solid #6daa67;
     cursor: pointer;
     pointer-events: auto;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 5px var(--shadow-medium);
 }
 
 #startRange {
@@ -461,7 +556,7 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .btn-guardar {
-    background: linear-gradient(135deg, #508650 0%, #306b4b 100%);
+    background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
     padding: 10px 20px;
     width: 100%;
     font-size: 15px;
@@ -532,14 +627,14 @@ input[type="range"]::-moz-range-thumb {
 
 .btn-autoplay {
     background: var(--time-value-bg);
-    border-color: #11998e;
+    border-color: var(--focus-color);
     transition: all 0.2s ease;
 }
 
 .btn-autoplay.active {
-    background: linear-gradient(135deg, #508650 0%, #306b4b 100%);
+    background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
     color: rgb(74, 226, 14);
-    border-color: #11998e;
+    border-color: var(--focus-color);
 }
 
 .btn-autoplay:hover {
@@ -550,7 +645,7 @@ input[type="range"]::-moz-range-thumb {
     text-align: center;
     margin-top: 10px;
     font-size: 14px;
-    color: #667eea;
+    color: var(--accent-color);
     font-weight: 600;
     animation: slideDown 0.3s ease;
 }
@@ -578,8 +673,8 @@ input[type="range"]::-moz-range-thumb {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #508650 0%, #306b4b 100%);
-    color: rgb(57, 214, 10);
+    background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+    color: rgb(255, 255, 255);
     border: none;
     font-size: 24px;
     font-weight: bold;
@@ -593,7 +688,7 @@ input[type="range"]::-moz-range-thumb {
 
 .btn-add-playlist:hover {
     transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 12px rgba(117, 234, 102, 0.4);
 }
 
 .playlist-item {
@@ -610,8 +705,8 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .playlist-item.playing {
-    border-color: #2fd30f;
-    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+    border-color: var(--success-color);
+    box-shadow: 0 4px 20px rgba(99, 245, 94, 0.3);
 }
 
 .playlist-header-row {
@@ -649,15 +744,15 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .btn-play-playlist {
-    background: linear-gradient(135deg, #508650 0%, #306b4b 100%);
+    background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
 }
 
 .btn-share-playlist {
-    background: linear-gradient(135deg, #508650 0%, #054924 100%);
+    background: linear-gradient(135deg, var(--secondary-gradient-start) 0%, var(--secondary-gradient-end) 100%);
 }
 
 .btn-delete-playlist {
-    background: linear-gradient(135deg, #508650 0%, #054924 100%);
+    background: linear-gradient(135deg, var(--secondary-gradient-start) 0%, var(--secondary-gradient-end) 100%);
 }
 
 .playlist-clips {
@@ -695,14 +790,14 @@ input[type="range"]::-moz-range-thumb {
     left: 0;
     height: 100%;
     width: var(--clip-progress);
-    background: linear-gradient(90deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+    background: linear-gradient(90deg, var(--progress-bar-start) 0%, var(--progress-bar-end) 100%);
     transition: width 0.1s linear;
     border-radius: 8px 0 0 8px;
     z-index: 0;
 }
 
 [data-theme="dark"] .clip-item-mini::before {
-    background: linear-gradient(90deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%);
+    background: linear-gradient(90deg, var(--progress-bar-start) 0%, var(--progress-bar-end) 100%);
 }
 
 /* Asegurar que el contenido esté sobre la barra de progreso */
@@ -721,7 +816,7 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .clip-item-mini.drag-over {
-    border-color: #667eea;
+    border-color: var(--accent-color);
     border-width: 2px;
 }
 
@@ -757,15 +852,15 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .btn-play-clip {
-    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    background: linear-gradient(135deg, var(--btn-play-start) 0%, var(--btn-play-end) 100%);
 }
 
 .btn-clone-clip {
-    background: linear-gradient(135deg, #ffa751 0%, #ffe259 100%);
+    background: linear-gradient(135deg, var(--btn-clone-start) 0%, var(--btn-clone-end) 100%);
 }
 
 .btn-delete-clip {
-    background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+    background: linear-gradient(135deg, var(--btn-delete-start) 0%, var(--btn-delete-end) 100%);
 }
 
 /* Modales */
@@ -883,7 +978,7 @@ input[type="range"]::-moz-range-thumb {
 .modal-body input[type="text"]:focus,
 .playlist-select:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: var(--accent-color);
 }
 
 .playlist-select {
@@ -954,7 +1049,7 @@ input[type="range"]::-moz-range-thumb {
 
 .btn-copy-url {
     padding: 12px 20px;
-    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    background: linear-gradient(135deg, var(--btn-share-start) 0%, var(--btn-share-end) 100%);
     color: rgb(0, 214, 0);
     border: none;
     border-radius: 8px;
@@ -967,11 +1062,11 @@ input[type="range"]::-moz-range-thumb {
 
 .btn-copy-url:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+    box-shadow: 0 5px 15px rgba(79, 254, 94, 0.4);
 }
 
 .btn-copy-url.copied {
-    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    background: linear-gradient(135deg, var(--btn-play-start) 0%, var(--btn-play-end) 100%);
 }
 
 .modal-footer {
@@ -1005,14 +1100,14 @@ input[type="range"]::-moz-range-thumb {
 
 .btn-modal-create,
 .btn-modal-save {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--accent-color) 0%, #764ba2 100%);
     color: rgb(7, 207, 0);
 }
 
 .btn-modal-create:hover,
 .btn-modal-save:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 5px 15px rgba(102, 234, 102, 0.4);
 }
 
 .empty-state {
@@ -1255,3 +1350,67 @@ input[type="range"]::-moz-range-thumb {
         margin-top: 8px;
     }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   🎨 EJEMPLOS DE PALETAS DE COLORES
+   ═══════════════════════════════════════════════════════════════════════════
+   
+   Copia y pega estos valores en la sección :root para cambiar el tema completo
+   
+   ─────────────────────────────────────────────────────────────────────────── 
+   
+   🟢 PALETA VERDE (ACTUAL):
+   --bg-gradient-start: #508650;
+   --bg-gradient-end: #306b4b;
+   --secondary-gradient-start: #508650;
+   --secondary-gradient-end: #054924;
+   
+   ─────────────────────────────────────────────────────────────────────────── 
+   
+   🔵 PALETA AZUL:
+   --bg-gradient-start: #4A90E2;
+   --bg-gradient-end: #2E5C8A;
+   --secondary-gradient-start: #4A90E2;
+   --secondary-gradient-end: #1A3A5C;
+   
+   ─────────────────────────────────────────────────────────────────────────── 
+   
+   🟣 PALETA PÚRPURA:
+   --bg-gradient-start: #667eea;
+   --bg-gradient-end: #764ba2;
+   --secondary-gradient-start: #667eea;
+   --secondary-gradient-end: #4a2c6d;
+   
+   ─────────────────────────────────────────────────────────────────────────── 
+   
+   🔴 PALETA ROJO/ROSA:
+   --bg-gradient-start: #ee5a6f;
+   --bg-gradient-end: #c73866;
+   --secondary-gradient-start: #ee5a6f;
+   --secondary-gradient-end: #8b2244;
+   
+   ─────────────────────────────────────────────────────────────────────────── 
+   
+   🟠 PALETA NARANJA:
+   --bg-gradient-start: #f79d00;
+   --bg-gradient-end: #d97706;
+   --secondary-gradient-start: #f79d00;
+   --secondary-gradient-end: #92400e;
+   
+   ─────────────────────────────────────────────────────────────────────────── 
+   
+   ⚫ PALETA GRIS OSCURO:
+   --bg-gradient-start: #4b5563;
+   --bg-gradient-end: #1f2937;
+   --secondary-gradient-start: #4b5563;
+   --secondary-gradient-end: #111827;
+   
+   ─────────────────────────────────────────────────────────────────────────── 
+   
+   🌊 PALETA CYAN/TURQUESA:
+   --bg-gradient-start: #06b6d4;
+   --bg-gradient-end: #0891b2;
+   --secondary-gradient-start: #06b6d4;
+   --secondary-gradient-end: #155e75;
+   
+   ═══════════════════════════════════════════════════════════════════════════ */
