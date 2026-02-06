@@ -35,7 +35,7 @@ function toggleTheme() {
     
     // Actualizar icono
     const icon = document.querySelector('.theme-icon');
-    icon.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+    icon.innerHTML = newTheme === 'dark' ? getIcon('sun') : getIcon('moon');
 }
 
 // Cargar tema guardado al inicio
@@ -44,7 +44,7 @@ function loadTheme() {
     document.documentElement.setAttribute('data-theme', savedTheme);
     const icon = document.querySelector('.theme-icon');
     if (icon) {
-        icon.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+        icon.innerHTML = savedTheme === 'dark' ? getIcon('sun') : getIcon('moon');
     }
 }
 
@@ -331,7 +331,7 @@ function updatePlayPauseIcon() {
     if (!player || !isPlayerReady) return;
     
     const state = player.getPlayerState();
-    btn.textContent = (state === YT.PlayerState.PLAYING) ? '❚❚' : '▶';
+    updatePlayPauseButton(state === YT.PlayerState.PLAYING);
 }
 
 function togglePlayPause() {
@@ -1158,9 +1158,15 @@ function generatePlaylistsHTML() {
                     ondblclick="event.stopPropagation(); editPlaylistName(${pl.id})"
                     title="Doble clic para editar">${pl.name}</span>
                 <div class="playlist-actions">
-                    <button class="btn-play-playlist" onclick="event.stopPropagation(); playPlaylist(${pl.id})" title="Reproducir">▶</button>
-                    <button class="btn-share-playlist" onclick="event.stopPropagation(); sharePlaylist(${pl.id})" title="Compartir">🔗</button>
-                    <button class="btn-delete-playlist" onclick="event.stopPropagation(); deletePlaylist(${pl.id})" title="Eliminar">🗑</button>
+                    <button class="btn-play-playlist" onclick="event.stopPropagation(); playPlaylist(${pl.id})" title="Reproducir">
+                        ${getIcon('play', 'icon-md')}
+                    </button>
+                    <button class="btn-share-playlist" onclick="event.stopPropagation(); sharePlaylist(${pl.id})" title="Compartir">
+                        ${getIcon('link', 'icon-md')}
+                    </button>
+                    <button class="btn-delete-playlist" onclick="event.stopPropagation(); deletePlaylist(${pl.id})" title="Eliminar">
+                        ${getIcon('delete', 'icon-md')}
+                    </button>
                 </div>
             </div>
             <div class="playlist-clips ${pl.expanded ? 'expanded' : ''}" id="clips-${pl.id}">
@@ -1183,14 +1189,27 @@ function generatePlaylistsHTML() {
                             ondragleave="handleDragLeave(event)"
                             ondrop="handleDrop(event)"
                             ondragend="handleDragEnd(event)">
-                            <span class="drag-handle" title="Arrastrar para reordenar">⋮⋮</span>
+                            <span class="drag-handle" title="Arrastrar para reordenar">
+                                ${getIcon('dragHandle', 'icon-sm')}
+                            </span>
                             <span class="clip-name"
                                 ondblclick="editClipName(${pl.id}, ${i})"
                                 title="${clip.name || 'FRAGMENTO'}">${clip.name || 'FRAGMENTO'}</span>
                             <div class="clip-actions-mini">
-                                <button class="btn-play-clip" onclick="playClipDirect(${pl.id}, ${i})" title="Reproducir">▶</button>
-                                <button class="btn-clone-clip" onclick="cloneClip(${pl.id}, ${i})" title="Clonar">📋</button>
-                                <button class="btn-delete-clip" onclick="deleteClip(${pl.id}, ${i})" title="Eliminar">🗑</button>
+                                <button class="btn-favorite-clip ${clip.favorite ? 'favorited' : ''}" 
+                                    onclick="toggleFavorite(${pl.id}, ${i})" 
+                                    title="${clip.favorite ? 'Quitar de favoritos' : 'Marcar como favorito'}">
+                                    ${clip.favorite ? getIcon('starFilled') : getIcon('star')}
+                                </button>
+                                <button class="btn-play-clip" onclick="playClipDirect(${pl.id}, ${i})" title="Reproducir">
+                                    ${getIcon('play')}
+                                </button>
+                                <button class="btn-clone-clip" onclick="cloneClip(${pl.id}, ${i})" title="Clonar">
+                                    ${getIcon('clone')}
+                                </button>
+                                <button class="btn-delete-clip" onclick="deleteClip(${pl.id}, ${i})" title="Eliminar">
+                                    ${getIcon('delete')}
+                                </button>
                             </div>
                         </div>`;
                     }).join('')}
@@ -1300,9 +1319,104 @@ function cloneClip(playlistId, clipIndex) {
     showNotification('✅ Fragmento clonado', 'success');
 }
 
+// ─── Toggle Favorito ─────────────────────────────────────────
+function toggleFavorite(playlistId, clipIndex) {
+    const pl = savedPlaylists.find(p => p.id === playlistId);
+    if (!pl) return;
+    const clip = pl.clips[clipIndex];
+    if (!clip) return;
+    
+    // Alternar el estado de favorito
+    clip.favorite = !clip.favorite;
+    
+    // Guardar inmediatamente sin re-renderizar
+    saveToLocalStorage();
+    
+    // Encontrar todos los elementos del clip (desktop y mobile)
+    const clipElements = document.querySelectorAll(
+        `[data-playlist-id="${playlistId}"][data-clip-index="${clipIndex}"]`
+    );
+    
+    // Aplicar animación dorada a todos los elementos del clip
+    clipElements.forEach(clipElement => {
+        clipElement.classList.add('favorite-animation');
+        
+        // Actualizar solo el botón de favorito sin re-renderizar todo
+        const favoriteBtn = clipElement.querySelector('.btn-favorite-clip');
+        if (favoriteBtn) {
+            if (clip.favorite) {
+                favoriteBtn.classList.add('favorited');
+                favoriteBtn.innerHTML = getIcon('starFilled');
+                favoriteBtn.title = 'Quitar de favoritos';
+            } else {
+                favoriteBtn.classList.remove('favorited');
+                favoriteBtn.innerHTML = getIcon('star');
+                favoriteBtn.title = 'Marcar como favorito';
+            }
+        }
+        
+        // Remover la animación después de 1 segundo
+        setTimeout(() => {
+            clipElement.classList.remove('favorite-animation');
+        }, 1000);
+    });
+    
+    // Mostrar notificación
+    if (clip.favorite) {
+        showNotification('⭐ Marcado como favorito', 'success', 1500);
+    } else {
+        showNotification('Removido de favoritos', 'success', 1500);
+    }
+}
+
 // ─── Editar nombres ──────────────────────────────────────────
+
+// ─── Inicializar Iconos SVG ──────────────────────────────────
+function initializeIcons() {
+    // Botones de transporte
+    const prevBtn = document.getElementById('prevBtn');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const autoPlayBtn = document.getElementById('autoPlayBtn');
+    
+    if (prevBtn) prevBtn.innerHTML = getIcon('prev', 'icon-lg');
+    if (playPauseBtn) playPauseBtn.innerHTML = getIcon('play', 'icon-lg');
+    if (nextBtn) nextBtn.innerHTML = getIcon('next', 'icon-lg');
+    if (autoPlayBtn) autoPlayBtn.innerHTML = getIcon('repeat', 'icon-lg');
+    
+    // Botón de agregar playlist
+    const addPlaylistBtns = document.querySelectorAll('.btn-add-playlist');
+    addPlaylistBtns.forEach(btn => {
+        btn.innerHTML = getIcon('add', 'icon-lg');
+    });
+    
+    // Botones de cierre de modales
+    const closeButtons = document.querySelectorAll('.modal-close .icon-close');
+    closeButtons.forEach(btn => {
+        btn.innerHTML = Icons.close;
+    });
+}
+
+// Actualizar botón play/pause
+function updatePlayPauseButton(isPlaying) {
+    const btn = document.getElementById('playPauseBtn');
+    if (btn) {
+        btn.innerHTML = isPlaying ? getIcon('pause', 'icon-lg') : getIcon('play', 'icon-lg');
+    }
+}
 
 // ─── Init ────────────────────────────────────────────────────
 loadFromLocalStorage();
 renderPlaylists();
 checkForSharedPlaylist(); // Verificar si hay una playlist compartida en la URL
+
+// Inicializar iconos cuando el DOM esté listo
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        loadTheme();
+        initializeIcons();
+    });
+} else {
+    loadTheme();
+    initializeIcons();
+}
