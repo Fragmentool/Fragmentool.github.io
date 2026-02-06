@@ -34,17 +34,17 @@
     --border-color: #e0e0e0;             /* Color de bordes */
     
     /* ─── Botones de Acción (Play, Clone, Delete) ─── */
-    --btn-play-start: #11998e;           /* Verde azulado - botón play */
-    --btn-play-end: #38ef7d;             /* Verde claro - botón play */
+    --btn-play-start: #808080;           /* Verde azulado - botón play */
+    --btn-play-end: #808080;             /* Verde claro - botón play */
     
-    --btn-clone-start: #ffa751;          /* Naranja - botón clonar */
-    --btn-clone-end: #ffe259;            /* Amarillo - botón clonar */
+    --btn-clone-start: #1a2e1b;          /* Naranja - botón clonar */
+    --btn-clone-end: #1a2e1b;            /* Amarillo - botón clonar */
     
-    --btn-delete-start: #eb3349;         /* Rojo - botón eliminar */
-    --btn-delete-end: #f45c43;           /* Rojo claro - botón eliminar */
+    --btn-delete-start: #1a2e1b;         /* Rojo - botón eliminar */
+    --btn-delete-end: #1a2e1b;           /* Rojo claro - botón eliminar */
     
-    --btn-share-start: #4facfe;          /* Azul - botón compartir */
-    --btn-share-end: #00f2fe;            /* Cyan - botón compartir */
+    --btn-share-start: #1a2e1b;          /* Azul - botón compartir */
+    --btn-share-end: #1a2e1b;            /* Cyan - botón compartir */
     
     /* ─── Acentos y Highlights ─── */
     --accent-color: var(--accent-color);             /* Color de acento principal */
@@ -67,6 +67,9 @@
     /* ─── Barra de Progreso del Fragmento ─── */
     --progress-bar-start: rgba(75, 162, 126, 0.2);  /* Inicio gradiente progreso */
     --progress-bar-end: rgba(107, 221, 126, 0.397);     /* Fin gradiente progreso */
+    
+    /* ─── Color de Favorito ─── */
+    --favorite-color: #FFD700;              /* Color dorado para favoritos */
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -75,12 +78,12 @@
 
 [data-theme="dark"] {
     /* ─── Gradiente Principal (Header y Botones) ─── */
-    --bg-gradient-start: #385338;        /* Azul oscuro - inicio del gradiente */
-    --bg-gradient-end: #30523a;          /* Azul muy oscuro - fin del gradiente */
+    --bg-gradient-start: #000000;        /* Azul oscuro - inicio del gradiente */
+    --bg-gradient-end: #022b0e;          /* Azul muy oscuro - fin del gradiente */
     
     /* ─── Gradiente Secundario (Botones Hover) ─── */
-    --secondary-gradient-start: #508650; /* Verde medio */
-    --secondary-gradient-end: #054924;   /* Verde muy oscuro */
+    --secondary-gradient-start: #237e23; /* Verde medio */
+    --secondary-gradient-end: #30523a;   /* Verde muy oscuro */
     
     /* ─── Fondos ─── */
     --container-bg: #10190f;             /* Fondo principal de la app */
@@ -97,7 +100,7 @@
     --text-secondary: #a0a0a0;           /* Texto secundario */
     
     /* ─── Bordes y Líneas ─── */
-    --border-color: #2a2a3e;             /* Color de bordes */
+    --border-color: #055a00;             /* Color de bordes */
     
     /* Los botones de acción mantienen los mismos colores en modo oscuro */
     
@@ -122,6 +125,72 @@
     /* ─── Barra de Progreso del Fragmento ─── */
     --progress-bar-start: rgba(75, 162, 126, 0.2);  /* Inicio gradiente progreso (más visible) */
     --progress-bar-end: rgba(107, 221, 126, 0.397);     /* Fin gradiente progreso (más visible) */
+    
+    /* ─── Color de Favorito ─── */
+    --favorite-color: #FFD700;              /* Color dorado para favoritos */
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   🎨 ICONOS SVG MINIMALISTAS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.icon {
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.icon-sm {
+    width: 14px;
+    height: 14px;
+}
+
+.icon-md {
+    width: 18px;
+    height: 18px;
+}
+
+.icon-lg {
+    width: 20px;
+    height: 20px;
+}
+
+.icon svg {
+    width: 100%;
+    height: 100%;
+    fill: currentColor;
+    stroke: currentColor;
+}
+
+/* Iconos específicos con solo stroke */
+.icon-star svg,
+.icon-star-filled svg,
+.icon-play svg,
+.icon-pause svg,
+.icon-next svg,
+.icon-prev svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* Iconos específicos con fill */
+.icon-delete svg,
+.icon-share svg,
+.icon-clone svg,
+.icon-edit svg,
+.icon-add svg {
+    fill: currentColor;
+    stroke: none;
+}
+
+/* Estrella rellena necesita fill */
+.icon-star-filled svg {
+    fill: currentColor;
+    stroke: currentColor;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
@@ -138,7 +207,7 @@ body {
     min-height: 100vh;
     padding: 0;
     margin: 0;
-    transition: background 0.3s ease;
+    transition: 0.3s ease;
 }
 
 .container {
@@ -149,7 +218,7 @@ body {
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    transition: background 0.3s ease;
+    transition: 0.3s ease;
 }
 
 .header {
@@ -225,7 +294,7 @@ body {
     height: 100%;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    transition: background 0.3s ease, border-color 0.3s ease;
+    transition: 0.3s ease, border-color 0.3s ease;
 }
 
 .sidebar-playlists .playlists-header,
@@ -315,7 +384,7 @@ input[type="text"] {
     border: 2px solid var(--border-color);
     border-radius: 10px;
     font-size: 16px;
-    transition: border-color 0.3s, background 0.3s;
+    transition: border-color 0.3s, 0.3s;
     background: var(--input-bg);
     color: var(--text-primary);
 }
@@ -389,7 +458,7 @@ button:disabled {
     padding: 12px;
     gap: 8px;
     border-radius: 10px;
-    transition: background 0.3s ease;
+    transition:  0.3s ease;
     flex-shrink: 0;
     width: 100%;
 }
@@ -497,7 +566,7 @@ button:disabled {
     height: 10px;
     background: var(--border-color);
     border-radius: 5px;
-    transition: background 0.3s ease;
+    transition:  0.3s ease;
 }
 
 .range-selection {
@@ -521,25 +590,42 @@ input[type="range"] {
 
 input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: #ffffff;
-    border: 3px solid #6daa67;
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 18px solid #6daa67;
     cursor: pointer;
     pointer-events: auto;
-    box-shadow: 0 2px 5px var(--shadow-medium);
+    filter: drop-shadow(0 2px 5px var(--shadow-medium));
+    background: transparent;
+    border-radius: 0;
+}
+
+/* Triángulo apuntando hacia arriba para el slider de fin */
+#endRange::-webkit-slider-thumb {
+    border-top: none;
+    border-bottom: 18px solid #6daa67;
 }
 
 input[type="range"]::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: white;
-    border: 3px solid #6daa67;
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 18px solid #6daa67;
     cursor: pointer;
     pointer-events: auto;
-    box-shadow: 0 2px 5px var(--shadow-medium);
+    filter: drop-shadow(0 2px 5px var(--shadow-medium));
+    background: transparent;
+    border-radius: 0;
+    border: none;
+}
+
+/* Triángulo apuntando hacia arriba para el slider de fin */
+#endRange::-moz-range-thumb {
+    border-top: none;
+    border-bottom: 18px solid #6daa67;
 }
 
 #startRange {
@@ -660,7 +746,7 @@ input[type="range"]::-moz-range-thumb {
     align-items: center;
     padding-bottom: 12px;
     border-bottom: 1px solid var(--border-color);
-    transition: background 0.3s ease, border-color 0.3s ease;
+    transition:  0.3s ease, border-color 0.3s ease;
 }
 
 .playlists-header h2 {
@@ -715,7 +801,7 @@ input[type="range"]::-moz-range-thumb {
     align-items: center;
     padding: 15px;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: 0.2s;
     gap: 10px;
 }
 
@@ -744,7 +830,7 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .btn-play-playlist {
-    background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+    background: linear-gradient(135deg, var(--secondary-gradient-start) 0%, var(--secondary-gradient-end) 100%);
 }
 
 .btn-share-playlist {
@@ -843,6 +929,77 @@ input[type="range"]::-moz-range-thumb {
     gap: 5px;
 }
 
+.btn-favorite-clip {
+    padding: 6px 10px;
+    font-size: 16px;
+    border-radius: 6px;
+    background: var(--clip-item-bg);
+   
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-favorite-clip .icon {
+    width: 16px;
+    height: 16px;
+}
+
+.btn-favorite-clip:hover {
+    background: var(--border-color);
+    transform: scale(1.1);
+}
+
+.btn-favorite-clip.favorited {
+    color: var(--text-secondary);
+}
+
+/* Ajustar tamaño de iconos en botones de acción */
+.btn-play-clip .icon,
+.btn-clone-clip .icon,
+.btn-delete-clip .icon {
+    width: 14px;
+    height: 14px;
+}
+
+/* Ajustar iconos en botones de playlist */
+.btn-play-playlist .icon,
+.btn-share-playlist .icon,
+.btn-delete-playlist .icon {
+    width: 16px;
+    height: 16px;
+}
+
+/* Botones de cierre de modal */
+.modal-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-close .icon {
+    width: 20px;
+    height: 20px;
+}
+
+/* Animación de favorito - borde dorado */
+@keyframes favoriteBorderPulse {
+    0%, 100% {
+        border-color: var(--border-color);
+    }
+    50% {
+        border-color: var(--favorite-color);
+        box-shadow: 0 0 15px var(--favorite-color);
+    }
+}
+
+.clip-item-mini.favorite-animation {
+    animation: favoriteBorderPulse 1s ease-in-out;
+}
+
 .btn-play-clip,
 .btn-clone-clip,
 .btn-delete-clip {
@@ -908,7 +1065,7 @@ input[type="range"]::-moz-range-thumb {
     max-width: 500px;
     box-shadow: 0 10px 40px rgba(0,0,0,0.3);
     animation: slideUp 0.3s ease;
-    transition: background 0.3s ease;
+    transition: 0.3s ease;
 }
 
 @keyframes slideUp {
@@ -948,7 +1105,7 @@ input[type="range"]::-moz-range-thumb {
     align-items: center;
     justify-content: center;
     border-radius: 5px;
-    transition: background 0.2s;
+    transition:  0.2s;
     padding: 0;
     line-height: 1;
 }
@@ -972,7 +1129,7 @@ input[type="range"]::-moz-range-thumb {
     margin-bottom: 15px;
     background: var(--input-bg);
     color: var(--text-primary);
-    transition: border-color 0.3s, background 0.3s;
+    transition: border-color 0.3s, 0.3s;
 }
 
 .modal-body input[type="text"]:focus,
@@ -1050,7 +1207,7 @@ input[type="range"]::-moz-range-thumb {
 .btn-copy-url {
     padding: 12px 20px;
     background: linear-gradient(135deg, var(--btn-share-start) 0%, var(--btn-share-end) 100%);
-    color: rgb(0, 214, 0);
+    color: rgb(255, 255, 255);
     border: none;
     border-radius: 8px;
     font-size: 14px;
@@ -1100,7 +1257,7 @@ input[type="range"]::-moz-range-thumb {
 
 .btn-modal-create,
 .btn-modal-save {
-    background: linear-gradient(135deg, var(--accent-color) 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--accent-color) 0%, #55a24b 100%);
     color: rgb(7, 207, 0);
 }
 
@@ -1350,67 +1507,3 @@ input[type="range"]::-moz-range-thumb {
         margin-top: 8px;
     }
 }
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   🎨 EJEMPLOS DE PALETAS DE COLORES
-   ═══════════════════════════════════════════════════════════════════════════
-   
-   Copia y pega estos valores en la sección :root para cambiar el tema completo
-   
-   ─────────────────────────────────────────────────────────────────────────── 
-   
-   🟢 PALETA VERDE (ACTUAL):
-   --bg-gradient-start: #508650;
-   --bg-gradient-end: #306b4b;
-   --secondary-gradient-start: #508650;
-   --secondary-gradient-end: #054924;
-   
-   ─────────────────────────────────────────────────────────────────────────── 
-   
-   🔵 PALETA AZUL:
-   --bg-gradient-start: #4A90E2;
-   --bg-gradient-end: #2E5C8A;
-   --secondary-gradient-start: #4A90E2;
-   --secondary-gradient-end: #1A3A5C;
-   
-   ─────────────────────────────────────────────────────────────────────────── 
-   
-   🟣 PALETA PÚRPURA:
-   --bg-gradient-start: #667eea;
-   --bg-gradient-end: #764ba2;
-   --secondary-gradient-start: #667eea;
-   --secondary-gradient-end: #4a2c6d;
-   
-   ─────────────────────────────────────────────────────────────────────────── 
-   
-   🔴 PALETA ROJO/ROSA:
-   --bg-gradient-start: #ee5a6f;
-   --bg-gradient-end: #c73866;
-   --secondary-gradient-start: #ee5a6f;
-   --secondary-gradient-end: #8b2244;
-   
-   ─────────────────────────────────────────────────────────────────────────── 
-   
-   🟠 PALETA NARANJA:
-   --bg-gradient-start: #f79d00;
-   --bg-gradient-end: #d97706;
-   --secondary-gradient-start: #f79d00;
-   --secondary-gradient-end: #92400e;
-   
-   ─────────────────────────────────────────────────────────────────────────── 
-   
-   ⚫ PALETA GRIS OSCURO:
-   --bg-gradient-start: #4b5563;
-   --bg-gradient-end: #1f2937;
-   --secondary-gradient-start: #4b5563;
-   --secondary-gradient-end: #111827;
-   
-   ─────────────────────────────────────────────────────────────────────────── 
-   
-   🌊 PALETA CYAN/TURQUESA:
-   --bg-gradient-start: #06b6d4;
-   --bg-gradient-end: #0891b2;
-   --secondary-gradient-start: #06b6d4;
-   --secondary-gradient-end: #155e75;
-   
-   ═══════════════════════════════════════════════════════════════════════════ */
