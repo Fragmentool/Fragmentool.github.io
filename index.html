@@ -9,10 +9,10 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎬 Creador de Playlist de Fragmentos</h1>
+            <h1>Creador de Playlist de Fragmentos</h1>
             <p>Crea tu lista de reproducción personalizada con fragmentos específicos de videos de YouTube</p>
             <button class="btn-theme-toggle" onclick="toggleTheme()" title="Cambiar tema">
-                <span class="theme-icon">🌙</span>
+                <span class="theme-icon"></span>
             </button>
         </div>
 
@@ -110,7 +110,9 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h3>Crear Nueva Playlist</h3>
-                        <button class="modal-close" onclick="closeCreatePlaylistModal()">✕</button>
+                        <button class="modal-close" onclick="closeCreatePlaylistModal()">
+                            <span class="icon icon-close"></span>
+                        </button>
                     </div>
                     <div class="modal-body">
                         <input 
@@ -133,7 +135,9 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h3>GUARDAR EN:</h3>
-                        <button class="modal-close" onclick="closeSaveClipModal()">✕</button>
+                        <button class="modal-close" onclick="closeSaveClipModal()">
+                            <span class="icon icon-close"></span>
+                        </button>
                     </div>
                     <div class="modal-body">
                         <select id="playlistSelect" class="playlist-select">
@@ -157,8 +161,10 @@
             <div class="modal" id="sharePlaylistModal">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h3>🔗 Compartir Playlist</h3>
-                        <button class="modal-close" onclick="closeSharePlaylistModal()">✕</button>
+                        <h3>Compartir Playlist</h3>
+                        <button class="modal-close" onclick="closeSharePlaylistModal()">
+                            <span class="icon icon-close"></span>
+                        </button>
                     </div>
                     <div class="modal-body">
                         <p style="margin-bottom: 15px; color: var(--text-secondary);">
@@ -189,6 +195,7 @@
     </div>
 
     <script src="https://www.youtube.com/iframe_api"></script>
+    <script src="icons.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
