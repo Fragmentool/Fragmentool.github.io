@@ -158,7 +158,7 @@
     --progress-bar-end: rgba(107, 221, 126, 0.397);     /* Fin gradiente progreso (más visible) */
     
     /* ─── Color de Favorito ─── */
-    --favorite-color: #FFD700;              /* Color de dorado para favoritos */
+    --favorite-color: #FFD700;              /* Color de g dorado para favoritos */
     
     /* ─── Triángulos del Slider ─── */
     --triangle-start-fill: #ffffff;         /* Verde brillante - triángulo de inicio */
