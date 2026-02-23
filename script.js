@@ -123,9 +123,18 @@ function loadVideo() {
     currentVideoTitle = ''; // Resetear título
     stopEverything();
 
-    // Restablecer sliders a valores por defecto
-    document.getElementById('startRange').value = 0;
-    document.getElementById('endRange').value = 100;
+    // Restablecer triángulos a valores por defecto
+    const startTriangle = document.getElementById('startTriangle');
+    const endTriangle = document.getElementById('endTriangle');
+    if (startTriangle) {
+        startTriangle.dataset.value = 0;
+        startTriangle.style.left = '0%';
+    }
+    if (endTriangle) {
+        endTriangle.dataset.value = 100;
+        endTriangle.style.left = '100%';
+    }
+    updateRangeSelection();
 
     if (!player) {
         player = new YT.Player('player', {
@@ -153,10 +162,9 @@ function onPlayerReady() {
     
     document.getElementById('videoSection').classList.add('active');
     
-    document.getElementById('startRange').value = 0;
-    document.getElementById('startRange').max = videoDuration;
-    document.getElementById('endRange').value = videoDuration;
-    document.getElementById('endRange').max = videoDuration;
+    // Inicializar triángulos (ya están en porcentajes, solo actualizar display)
+    updateTimeDisplays();
+    updateRangeSelection();
     
     updateTimeDisplays();
     updateControlsVisibility();
@@ -188,67 +196,164 @@ function onPlayerStateChange(event) {
 }
 
 function updateRangeMax() {
-    const s = document.getElementById('startRange');
-    const e = document.getElementById('endRange');
-    s.max = videoDuration;
-    e.max = videoDuration;
-    if (e.value == 100 || parseFloat(e.value) > videoDuration) {
-        e.value = videoDuration;
+    // Los triángulos trabajan con porcentajes, solo necesitamos asegurar que endTriangle esté en 100% si corresponde
+    const endTriangle = document.getElementById('endTriangle');
+    if (endTriangle && parseFloat(endTriangle.dataset.value) > 100) {
+        endTriangle.dataset.value = 100;
+        endTriangle.style.left = '100%';
         updateTimeDisplays();
     }
 }
 
 // ─── Displays de tiempo y rango ──────────────────────────────
 function updateTimeDisplays() {
-    const start = parseFloat(document.getElementById('startRange').value);
-    const end   = parseFloat(document.getElementById('endRange').value);
-    document.getElementById('startTimeDisplay').textContent  = formatTime(start);
-    document.getElementById('endTimeDisplay').textContent    = formatTime(end);
-    document.getElementById('durationDisplay').textContent   = formatTime(end - start);
-
-    if (videoDuration > 0) {
-        const sel = document.getElementById('rangeSelection');
-        sel.style.left  = (start / videoDuration * 100) + '%';
-        sel.style.width = ((end - start) / videoDuration * 100) + '%';
-    }
+    const startTriangle = document.getElementById('startTriangle');
+    const endTriangle = document.getElementById('endTriangle');
+    
+    if (!startTriangle || !endTriangle) return;
+    
+    const startPercent = parseFloat(startTriangle.dataset.value);
+    const endPercent = parseFloat(endTriangle.dataset.value);
+    
+    const start = (startPercent / 100) * videoDuration;
+    const end = (endPercent / 100) * videoDuration;
+    
+    document.getElementById('startTimeDisplay').textContent = formatTime(start);
+    document.getElementById('endTimeDisplay').textContent = formatTime(end);
+    document.getElementById('durationDisplay').textContent = formatTime(end - start);
 }
 
 function updateUIForClip(clip) {
-    const s = document.getElementById('startRange');
-    const e = document.getElementById('endRange');
-    if (videoDuration > 0) { s.max = videoDuration; e.max = videoDuration; }
-    s.value = clip.startTime;
-    e.value = clip.endTime;
-    document.getElementById('startTimeDisplay').textContent  = formatTime(clip.startTime);
-    document.getElementById('endTimeDisplay').textContent    = formatTime(clip.endTime);
-    document.getElementById('durationDisplay').textContent   = formatTime(clip.duration);
-    if (videoDuration > 0) {
-        const sel = document.getElementById('rangeSelection');
-        sel.style.left  = (clip.startTime / videoDuration * 100) + '%';
-        sel.style.width = ((clip.endTime - clip.startTime) / videoDuration * 100) + '%';
+    if (videoDuration <= 0) return;
+    
+    const startPercent = (clip.startTime / videoDuration) * 100;
+    const endPercent = (clip.endTime / videoDuration) * 100;
+    
+    const startTriangle = document.getElementById('startTriangle');
+    const endTriangle = document.getElementById('endTriangle');
+    
+    if (startTriangle && endTriangle) {
+        startTriangle.dataset.value = startPercent;
+        startTriangle.style.left = startPercent + '%';
+        
+        endTriangle.dataset.value = endPercent;
+        endTriangle.style.left = endPercent + '%';
+    }
+    
+    // Sincronizar inputs hidden
+    const startRange = document.getElementById('startRange');
+    const endRange = document.getElementById('endRange');
+    if (startRange) startRange.value = startPercent;
+    if (endRange) endRange.value = endPercent;
+    
+    document.getElementById('startTimeDisplay').textContent = formatTime(clip.startTime);
+    document.getElementById('endTimeDisplay').textContent = formatTime(clip.endTime);
+    document.getElementById('durationDisplay').textContent = formatTime(clip.duration);
+    
+    updateRangeSelection();
+}
+
+// ─── Listeners de los sliders (Triángulos) ──────────────────
+document.addEventListener('DOMContentLoaded', function () {
+    loadTheme(); // Cargar tema al inicio
+    initTriangleSliders(); // Inicializar triángulos
+});
+
+// ═══════════════════════════════════════════════════════════════
+// 🔺 SISTEMA DE TRIÁNGULOS ARRASTRABLES
+// ═══════════════════════════════════════════════════════════════
+
+let activeTriangle = null;
+let containerRect = null;
+let startMoveTimeout = null;
+let endMoveTimeout = null;
+
+// Función para sincronizar los valores de los triángulos con los inputs hidden
+function syncTriangleToInput(triangleId, inputId) {
+    const triangle = document.getElementById(triangleId);
+    const input = document.getElementById(inputId);
+    if (triangle && input) {
+        input.value = triangle.dataset.value;
     }
 }
 
-// ─── Listeners de los sliders ────────────────────────────────
-document.addEventListener('DOMContentLoaded', function () {
-    loadTheme(); // Cargar tema al inicio
-    
-    const startRange = document.getElementById('startRange');
-    const endRange   = document.getElementById('endRange');
-    
-    let startMoveTimeout = null;
-    let endMoveTimeout = null;
+// Función para sincronizar los inputs hidden con los triángulos
+function syncInputToTriangle(inputId, triangleId) {
+    const input = document.getElementById(inputId);
+    const triangle = document.getElementById(triangleId);
+    if (input && triangle) {
+        triangle.dataset.value = input.value;
+        triangle.style.left = input.value + '%';
+    }
+}
 
-    startRange.addEventListener('input', function () {
-        if (parseFloat(this.value) >= parseFloat(endRange.value)) this.value = parseFloat(endRange.value) - 1;
-        updateTimeDisplays();
-        scheduleAutoSave();
-        
-        if (player && isPlayerReady && !isPlayingAll) {
+// Función para actualizar la barra de selección
+function updateRangeSelection() {
+    const startTriangle = document.getElementById('startTriangle');
+    const endTriangle = document.getElementById('endTriangle');
+    const selection = document.getElementById('rangeSelection');
+    
+    if (!startTriangle || !endTriangle || !selection) return;
+    
+    const startPos = parseFloat(startTriangle.dataset.value);
+    const endPos = parseFloat(endTriangle.dataset.value);
+    
+    const left = Math.min(startPos, endPos);
+    const right = Math.max(startPos, endPos);
+    
+    selection.style.left = left + '%';
+    selection.style.width = (right - left) + '%';
+    
+    // Sincronizar con inputs hidden para compatibilidad
+    syncTriangleToInput('startTriangle', 'startRange');
+    syncTriangleToInput('endTriangle', 'endRange');
+    
+    // Actualizar displays de tiempo
+    updateTimeDisplays();
+}
+
+// Función para manejar el inicio del arrastre (mouse)
+function onTriangleMouseDown(e, triangle) {
+    e.preventDefault();
+    e.stopPropagation();
+    activeTriangle = triangle;
+    containerRect = triangle.parentElement.getBoundingClientRect();
+    
+    document.addEventListener('mousemove', onTriangleMouseMove);
+    document.addEventListener('mouseup', onTriangleMouseUp);
+}
+
+// Función para manejar el movimiento (mouse)
+function onTriangleMouseMove(e) {
+    if (!activeTriangle || !containerRect) return;
+    
+    const x = e.clientX - containerRect.left;
+    const percent = Math.max(0, Math.min(100, (x / containerRect.width) * 100));
+    
+    const isStart = activeTriangle.id === 'startTriangle';
+    const otherTriangle = isStart ? document.getElementById('endTriangle') : document.getElementById('startTriangle');
+    const otherValue = parseFloat(otherTriangle.dataset.value);
+    
+    // Evitar que se crucen los triángulos (margen mínimo de 1%)
+    let finalValue = percent;
+    if (isStart && percent >= otherValue - 1) {
+        finalValue = otherValue - 1;
+    } else if (!isStart && percent <= otherValue + 1) {
+        finalValue = otherValue + 1;
+    }
+    
+    activeTriangle.dataset.value = finalValue;
+    activeTriangle.style.left = finalValue + '%';
+    
+    updateRangeSelection();
+    scheduleAutoSave();
+    
+    // Lógica de previsualización
+    if (player && isPlayerReady && !isPlayingAll) {
+        if (isStart) {
             if (startMoveTimeout) clearTimeout(startMoveTimeout);
-            
             startMoveTimeout = setTimeout(() => {
-                const startTime = parseFloat(this.value);
+                const startTime = (finalValue / 100) * videoDuration;
                 player.seekTo(startTime, true);
                 
                 if (currentEditingPlaylistId === null) {
@@ -256,29 +361,125 @@ document.addEventListener('DOMContentLoaded', function () {
                     startFragmentPreviewMonitor();
                 }
             }, 300);
+        } else {
+            if (player.getPlayerState() === YT.PlayerState.PLAYING) {
+                if (endMoveTimeout) clearTimeout(endMoveTimeout);
+                endMoveTimeout = setTimeout(() => {
+                    startFragmentPreviewMonitor();
+                }, 300);
+            }
         }
-    });
+    }
+}
 
-    endRange.addEventListener('input', function () {
-        if (parseFloat(this.value) <= parseFloat(startRange.value)) this.value = parseFloat(startRange.value) + 1;
-        updateTimeDisplays();
-        scheduleAutoSave();
-        
-        if (player && isPlayerReady && !isPlayingAll && player.getPlayerState() === YT.PlayerState.PLAYING) {
-            if (endMoveTimeout) clearTimeout(endMoveTimeout);
-            
-            endMoveTimeout = setTimeout(() => {
-                startFragmentPreviewMonitor();
+// Función para manejar el fin del arrastre (mouse)
+function onTriangleMouseUp() {
+    activeTriangle = null;
+    containerRect = null;
+    document.removeEventListener('mousemove', onTriangleMouseMove);
+    document.removeEventListener('mouseup', onTriangleMouseUp);
+}
+
+// Función para manejar el inicio del arrastre (touch)
+function onTriangleTouchStart(e, triangle) {
+    e.preventDefault();
+    e.stopPropagation();
+    activeTriangle = triangle;
+    containerRect = triangle.parentElement.getBoundingClientRect();
+    
+    document.addEventListener('touchmove', onTriangleTouchMove, { passive: false });
+    document.addEventListener('touchend', onTriangleTouchEnd);
+}
+
+// Función para manejar el movimiento (touch)
+function onTriangleTouchMove(e) {
+    if (!activeTriangle || !containerRect) return;
+    e.preventDefault();
+    
+    const touch = e.touches[0];
+    const x = touch.clientX - containerRect.left;
+    const percent = Math.max(0, Math.min(100, (x / containerRect.width) * 100));
+    
+    const isStart = activeTriangle.id === 'startTriangle';
+    const otherTriangle = isStart ? document.getElementById('endTriangle') : document.getElementById('startTriangle');
+    const otherValue = parseFloat(otherTriangle.dataset.value);
+    
+    // Evitar que se crucen los triángulos (margen mínimo de 1%)
+    let finalValue = percent;
+    if (isStart && percent >= otherValue - 1) {
+        finalValue = otherValue - 1;
+    } else if (!isStart && percent <= otherValue + 1) {
+        finalValue = otherValue + 1;
+    }
+    
+    activeTriangle.dataset.value = finalValue;
+    activeTriangle.style.left = finalValue + '%';
+    
+    updateRangeSelection();
+    scheduleAutoSave();
+    
+    // Lógica de previsualización
+    if (player && isPlayerReady && !isPlayingAll) {
+        if (isStart) {
+            if (startMoveTimeout) clearTimeout(startMoveTimeout);
+            startMoveTimeout = setTimeout(() => {
+                const startTime = (finalValue / 100) * videoDuration;
+                player.seekTo(startTime, true);
+                
+                if (currentEditingPlaylistId === null) {
+                    player.playVideo();
+                    startFragmentPreviewMonitor();
+                }
             }, 300);
+        } else {
+            if (player.getPlayerState() === YT.PlayerState.PLAYING) {
+                if (endMoveTimeout) clearTimeout(endMoveTimeout);
+                endMoveTimeout = setTimeout(() => {
+                    startFragmentPreviewMonitor();
+                }, 300);
+            }
         }
-    });
-});
+    }
+}
+
+// Función para manejar el fin del arrastre (touch)
+function onTriangleTouchEnd() {
+    activeTriangle = null;
+    containerRect = null;
+    document.removeEventListener('touchmove', onTriangleTouchMove);
+    document.removeEventListener('touchend', onTriangleTouchEnd);
+}
+
+// Inicializar los triángulos
+function initTriangleSliders() {
+    const startTriangle = document.getElementById('startTriangle');
+    const endTriangle = document.getElementById('endTriangle');
+    
+    if (!startTriangle || !endTriangle) return;
+    
+    // Eventos de mouse
+    startTriangle.addEventListener('mousedown', (e) => onTriangleMouseDown(e, startTriangle));
+    endTriangle.addEventListener('mousedown', (e) => onTriangleMouseDown(e, endTriangle));
+    
+    // Eventos de touch
+    startTriangle.addEventListener('touchstart', (e) => onTriangleTouchStart(e, startTriangle));
+    endTriangle.addEventListener('touchstart', (e) => onTriangleTouchStart(e, endTriangle));
+    
+    // Posicionar inicialmente
+    startTriangle.style.left = startTriangle.dataset.value + '%';
+    endTriangle.style.left = endTriangle.dataset.value + '%';
+    
+    updateRangeSelection();
+}
+
 
 // Monitor de previsualización de fragmento (modo fragmentar)
 function startFragmentPreviewMonitor() {
     if (fragmentPreviewInterval) clearInterval(fragmentPreviewInterval);
     
-    const endTime = parseFloat(document.getElementById('endRange').value);
+    const endTriangle = document.getElementById('endTriangle');
+    const endPercent = parseFloat(endTriangle.dataset.value);
+    const endTime = (endPercent / 100) * videoDuration;
     
     fragmentPreviewInterval = setInterval(() => {
         if (!player || !isPlayerReady) {
@@ -313,8 +514,14 @@ function scheduleAutoSave() {
         if (!pl || currentEditingClipIndex >= pl.clips.length) return;
         
         const clip = pl.clips[currentEditingClipIndex];
-        const s = parseFloat(document.getElementById('startRange').value);
-        const e = parseFloat(document.getElementById('endRange').value);
+        
+        const startTriangle = document.getElementById('startTriangle');
+        const endTriangle = document.getElementById('endTriangle');
+        const startPercent = parseFloat(startTriangle.dataset.value);
+        const endPercent = parseFloat(endTriangle.dataset.value);
+        
+        const s = (startPercent / 100) * videoDuration;
+        const e = (endPercent / 100) * videoDuration;
         
         clip.startTime = s;
         clip.endTime   = e;
@@ -362,7 +569,9 @@ function togglePlayPause() {
             fragmentPreviewInterval = null;
         }
     } else {
-        const s = parseFloat(document.getElementById('startRange').value);
+        const startTriangle = document.getElementById('startTriangle');
+        const startPercent = parseFloat(startTriangle.dataset.value);
+        const s = (startPercent / 100) * videoDuration;
         player.seekTo(s, true);
         player.playVideo();
         startFragmentPreviewMonitor();
@@ -460,8 +669,13 @@ function openSaveClipModal() {
         return;
     }
 
-    const s = parseFloat(document.getElementById('startRange').value);
-    const e = parseFloat(document.getElementById('endRange').value);
+    const startTriangle = document.getElementById('startTriangle');
+    const endTriangle = document.getElementById('endTriangle');
+    const startPercent = parseFloat(startTriangle.dataset.value);
+    const endPercent = parseFloat(endTriangle.dataset.value);
+    
+    const s = (startPercent / 100) * videoDuration;
+    const e = (endPercent / 100) * videoDuration;
 
     if (e <= s) {
         showNotification('El tiempo de fin debe ser mayor al de inicio', 'error', 3000);

@@ -69,11 +69,28 @@
                                 </div>
                             </div>
 
+                            <!-- NUEVA IMPLEMENTACIÓN: Triángulos Encontrados -->
                             <div class="range-container">
                                 <div class="range-track"></div>
                                 <div class="range-selection" id="rangeSelection"></div>
-                                <input type="range" id="startRange" min="0" max="100" value="0" step="0.1">
-                                <input type="range" id="endRange" min="0" max="100" value="100" step="0.1">
+                                
+                                <!-- Triángulo INICIO (verde, apunta arriba ↑) -->
+                                <div class="triangle-slider triangle-up" id="startTriangle" data-value="0">
+                                    <svg viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
+                                        <polygon points="15,5 25,25 5,25" stroke-width="2.5"/>
+                                    </svg>
+                                </div>
+                                
+                                <!-- Triángulo FIN (rojo, apunta abajo ↓) -->
+                                <div class="triangle-slider triangle-down" id="endTriangle" data-value="100">
+                                    <svg viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
+                                        <polygon points="15,25 25,5 5,5" stroke-width="2.5"/>
+                                    </svg>
+                                </div>
+                                
+                                <!-- Inputs hidden para mantener compatibilidad con el código existente -->
+                                <input type="hidden" id="startRange" value="0">
+                                <input type="hidden" id="endRange" value="100">
                             </div>
 
                             <div class="transport-controls">
