@@ -26,6 +26,9 @@ let fragmentPreviewInterval = null;
 // Fragmento pendiente (esperando ser guardado)
 let pendingClip = null;
 
+// Progreso actual del clip en reproducción (para restaurar tras re-render)
+let currentClipProgress = 0;
+
 // ─── Modo día/noche ──────────────────────────────────────────
 function toggleTheme() {
     const currentTheme = document.documentElement.getAttribute('data-theme');
@@ -349,19 +352,21 @@ function onTriangleMouseMove(e) {
     scheduleAutoSave();
     
     // Lógica de previsualización
-    if (player && isPlayerReady && !isPlayingAll) {
+    if (player && isPlayerReady) {
         if (isStart) {
             if (startMoveTimeout) clearTimeout(startMoveTimeout);
             startMoveTimeout = setTimeout(() => {
                 const startTime = (finalValue / 100) * videoDuration;
                 player.seekTo(startTime, true);
-                
-                if (currentEditingPlaylistId === null) {
-                    player.playVideo();
-                    startFragmentPreviewMonitor();
+
+                if (!isPlayingAll) {
+                    if (currentEditingPlaylistId === null) {
+                        player.playVideo();
+                        startFragmentPreviewMonitor();
+                    }
                 }
             }, 300);
-        } else {
+        } else if (!isPlayingAll) {
             if (player.getPlayerState() === YT.PlayerState.PLAYING) {
                 if (endMoveTimeout) clearTimeout(endMoveTimeout);
                 endMoveTimeout = setTimeout(() => {
@@ -419,19 +424,21 @@ function onTriangleTouchMove(e) {
     scheduleAutoSave();
     
     // Lógica de previsualización
-    if (player && isPlayerReady && !isPlayingAll) {
+    if (player && isPlayerReady) {
         if (isStart) {
             if (startMoveTimeout) clearTimeout(startMoveTimeout);
             startMoveTimeout = setTimeout(() => {
                 const startTime = (finalValue / 100) * videoDuration;
                 player.seekTo(startTime, true);
-                
-                if (currentEditingPlaylistId === null) {
-                    player.playVideo();
-                    startFragmentPreviewMonitor();
+
+                if (!isPlayingAll) {
+                    if (currentEditingPlaylistId === null) {
+                        player.playVideo();
+                        startFragmentPreviewMonitor();
+                    }
                 }
             }, 300);
-        } else {
+        } else if (!isPlayingAll) {
             if (player.getPlayerState() === YT.PlayerState.PLAYING) {
                 if (endMoveTimeout) clearTimeout(endMoveTimeout);
                 endMoveTimeout = setTimeout(() => {
@@ -858,6 +865,7 @@ function playClipFromPlaylist(playlistId, clipIndex) {
     
     currentPlayingIndex = clipIndex;
     currentPlayingClipId = clip.clipId; // Asignar el ID del clip actual
+    currentClipProgress = 0; // Resetear progreso al cambiar de clip
 
     currentEditingPlaylistId = playlistId;
     currentEditingClipIndex  = clipIndex;
@@ -975,6 +983,8 @@ function startPlayInterval(clip) {
 function updateClipProgress(percentage) {
     if (currentPlayingClipId === null) return;
     
+    currentClipProgress = percentage; // Guardar para restaurar tras re-render
+    
     // Buscar el elemento del clip actual por su ID único
     const clipElements = document.querySelectorAll(
         `[data-clip-id="${currentPlayingClipId}"]`
@@ -999,6 +1009,7 @@ function playClipDirect(playlistId, clipIndex) {
     currentPlayingIndex = clipIndex;
     currentPlayingPlaylistId = playlistId;
     currentPlayingClipId = clip.clipId; // Asignar el ID del clip actual
+    currentClipProgress = 0; // Resetear progreso al cambiar de clip
 
     currentEditingPlaylistId = playlistId;
     currentEditingClipIndex  = clipIndex;
@@ -1113,6 +1124,7 @@ function stopEverything() {
     currentPlayingClipId = null; // Resetear el ID del clip actual
     currentEditingPlaylistId = null;
     currentEditingClipIndex  = null;
+    currentClipProgress = 0; // Resetear progreso guardado
 
     if (playInterval) { 
         clearInterval(playInterval); 
@@ -1482,6 +1494,12 @@ function handleDrop(e) {
     pl.clips.splice(targetIdx, 0, moved);
     saveToLocalStorage();
     renderPlaylists();
+
+    // Restaurar la barra de progreso del fragmento en reproducción tras re-render
+    if (currentPlayingClipId !== null) {
+        updateClipProgress(currentClipProgress);
+    }
+
     return false;
 }
 
