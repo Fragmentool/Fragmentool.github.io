@@ -560,8 +560,16 @@ function togglePlayPause() {
         if (state === YT.PlayerState.PLAYING) {
             player.pauseVideo();
         } else {
-            // Si está pausado, reanudar desde donde estaba
+            // Si está pausado, reanudar y reiniciar el intervalo de monitoreo
+            // para que el fin del fragmento siga siendo respetado
             player.playVideo();
+            if (!playInterval && currentPlayingPlaylistId !== null) {
+                const pl = savedPlaylists.find(p => p.id === currentPlayingPlaylistId);
+                if (pl && pl.clips[currentPlayingIndex]) {
+                    const clip = pl.clips[currentPlayingIndex];
+                    startPlayInterval(clip);
+                }
+            }
         }
         // NO llamar updateTransportButtons aquí para no cambiar controles
         updatePlayPauseIcon();
@@ -626,11 +634,11 @@ function updateAutoPlayButton() {
     if (!btn) return;
     
     if (autoPlayNext) {
-        btn.innerHTML = '🔄';
+        btn.innerHTML = getIcon('autoplayOn', 'icon-lg');
         btn.title = 'Reproducción automática activada - Click para desactivar';
         btn.classList.add('active');
     } else {
-        btn.innerHTML = '⏸️';
+        btn.innerHTML = getIcon('autoplayOff', 'icon-lg');
         btn.title = 'Reproducción automática desactivada - Click para activar';
         btn.classList.remove('active');
     }
@@ -999,9 +1007,23 @@ function playClipDirect(playlistId, clipIndex) {
     const playlist = savedPlaylists.find(p => p.id === playlistId);
     if (!playlist) return;
     const clip = playlist.clips[clipIndex];
-    if (!player || !isPlayerReady) { 
-        showNotification('Primero carga un video', 'error', 3000); 
-        return; 
+    if (!clip) return;
+
+    // Si no hay player aún, cargar el video del clip y esperar
+    if (!player || !isPlayerReady) {
+        const urlInput = document.getElementById('videoUrl');
+        urlInput.value = `https://www.youtube.com/watch?v=${clip.videoId}`;
+        loadVideo();
+
+        const waitAndPlay = setInterval(() => {
+            if (isPlayerReady) {
+                clearInterval(waitAndPlay);
+                playClipDirect(playlistId, clipIndex);
+            }
+        }, 200);
+
+        setTimeout(() => clearInterval(waitAndPlay), 8000); // timeout de seguridad
+        return;
     }
 
     stopEverything();
@@ -1614,7 +1636,7 @@ function initializeIcons() {
     if (prevBtn) prevBtn.innerHTML = getIcon('prev', 'icon-lg');
     if (playPauseBtn) playPauseBtn.innerHTML = getIcon('play', 'icon-lg');
     if (nextBtn) nextBtn.innerHTML = getIcon('next', 'icon-lg');
-    if (autoPlayBtn) autoPlayBtn.innerHTML = getIcon('repeat', 'icon-lg');
+    if (autoPlayBtn) autoPlayBtn.innerHTML = getIcon('autoplayOn', 'icon-lg');
     
     // Botón de agregar playlist
     const addPlaylistBtns = document.querySelectorAll('.btn-add-playlist');
