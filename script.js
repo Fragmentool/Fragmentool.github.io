@@ -14,6 +14,7 @@ let currentPlayingPlaylistId = null;
 let currentPlayingClipId = null; // ID único del clip que se está reproduciendo
 let playInterval = null;
 let autoPlayNext = true; // Por defecto activado
+let userPaused = false; // Flag para distinguir pausa manual de fin natural
 
 // Estado de edición (fragmento guardado activo)
 let currentEditingPlaylistId = null;
@@ -534,7 +535,12 @@ function scheduleAutoSave() {
         clip.endTime   = e;
         clip.duration  = e - s;
         
+        // Actualizar la marca de tiempo en el nombre del fragmento
+        const baseName = clip.name.replace(/\s*\[\d+:\d+-\d+:\d+\]$/, '').trim();
+        clip.name = `${baseName} [${formatTime(s)}-${formatTime(e)}]`;
+        
         saveToLocalStorage();
+        renderPlaylists();
         showNotification('💾 Cambios guardados automáticamente', 'editing', 1500);
     }, 1000);
 }
@@ -558,17 +564,30 @@ function togglePlayPause() {
     if (isPlayingAll) {
         // Si está reproduciendo, pausar
         if (state === YT.PlayerState.PLAYING) {
+            userPaused = true;
             player.pauseVideo();
+            // Limpiar el intervalo para evitar que el monitor reactive el video
+            if (playInterval) {
+                clearInterval(playInterval);
+                playInterval = null;
+            }
         } else {
-            // Si está pausado, reanudar y reiniciar el intervalo de monitoreo
-            // para que el fin del fragmento siga siendo respetado
-            player.playVideo();
-            if (!playInterval && currentPlayingPlaylistId !== null) {
+            // Reanudar: limpiar flag y volver al inicio del fragmento si terminó
+            userPaused = false;
+            if (currentPlayingPlaylistId !== null) {
                 const pl = savedPlaylists.find(p => p.id === currentPlayingPlaylistId);
                 if (pl && pl.clips[currentPlayingIndex]) {
                     const clip = pl.clips[currentPlayingIndex];
+                    if (state === YT.PlayerState.ENDED || player.getCurrentTime() < clip.startTime || player.getCurrentTime() >= clip.endTime) {
+                        player.seekTo(clip.startTime, true);
+                    }
+                    player.playVideo();
                     startPlayInterval(clip);
+                } else {
+                    player.playVideo();
                 }
+            } else {
+                player.playVideo();
             }
         }
         // NO llamar updateTransportButtons aquí para no cambiar controles
@@ -669,9 +688,13 @@ function updateTransportButtons() {
     if (isPlayingAll && currentPlayingPlaylistId !== null) {
         prevBtn.classList.add('active');
         nextBtn.classList.add('active');
+        prevBtn.style.display = 'flex';
+        nextBtn.style.display = 'flex';
     } else {
         prevBtn.classList.remove('active');
         nextBtn.classList.remove('active');
+        prevBtn.style.display = 'none';
+        nextBtn.style.display = 'none';
     }
     
     updateControlsVisibility();
@@ -874,6 +897,7 @@ function playClipFromPlaylist(playlistId, clipIndex) {
     currentPlayingIndex = clipIndex;
     currentPlayingClipId = clip.clipId; // Asignar el ID del clip actual
     currentClipProgress = 0; // Resetear progreso al cambiar de clip
+    userPaused = false; // Limpiar pausa manual al iniciar nuevo clip
 
     currentEditingPlaylistId = playlistId;
     currentEditingClipIndex  = clipIndex;
@@ -920,7 +944,7 @@ function playClipFromPlaylist(playlistId, clipIndex) {
         }, 100);
         
         setTimeout(() => {
-            if (player.getPlayerState() !== YT.PlayerState.PLAYING) {
+            if (!userPaused && player.getPlayerState() !== YT.PlayerState.PLAYING) {
                 player.seekTo(clip.startTime, true);
                 player.playVideo();
                 startPlayInterval(clip);
@@ -954,6 +978,26 @@ function startPlayInterval(clip) {
         
         // CRÍTICO: Solo verificar tiempo si el video está reproduciendo
         const state = player.getPlayerState();
+        
+        // Si el video terminó naturalmente (endTime == videoDuration y nunca se movió el triángulo final)
+        if (state === YT.PlayerState.ENDED) {
+            clearInterval(playInterval);
+            playInterval = null;
+            updateClipProgress(100);
+            
+            if (autoPlayNext) {
+                currentPlayingIndex++;
+                setTimeout(() => {
+                    if (isPlayingAll) {
+                        playClipFromPlaylist(currentPlayingPlaylistId, currentPlayingIndex);
+                    }
+                }, 500);
+            } else {
+                showNotification('⏸️ Reproducción pausada - Activa la reproducción automática o usa ⮞', 'success', 2500);
+            }
+            return;
+        }
+        
         if (state !== YT.PlayerState.PLAYING) {
             return;
         }
@@ -1032,6 +1076,7 @@ function playClipDirect(playlistId, clipIndex) {
     currentPlayingPlaylistId = playlistId;
     currentPlayingClipId = clip.clipId; // Asignar el ID del clip actual
     currentClipProgress = 0; // Resetear progreso al cambiar de clip
+    userPaused = false; // Limpiar pausa manual al iniciar nuevo clip
 
     currentEditingPlaylistId = playlistId;
     currentEditingClipIndex  = clipIndex;
@@ -1073,7 +1118,7 @@ function playClipDirect(playlistId, clipIndex) {
         }, 100);
         
         setTimeout(() => {
-            if (player.getPlayerState() !== YT.PlayerState.PLAYING) {
+            if (!userPaused && player.getPlayerState() !== YT.PlayerState.PLAYING) {
                 player.seekTo(clip.startTime, true);
                 player.playVideo();
                 startSingleClipInterval(clip);
@@ -1105,6 +1150,27 @@ function startSingleClipInterval(clip) {
         }
         
         const state = player.getPlayerState();
+        
+        // Si el video terminó naturalmente (endTime == videoDuration y nunca se movió el triángulo final)
+        if (state === YT.PlayerState.ENDED) {
+            clearInterval(playInterval);
+            playInterval = null;
+            updateClipProgress(100);
+            
+            if (autoPlayNext) {
+                currentPlayingIndex++;
+                setTimeout(() => {
+                    if (isPlayingAll) {
+                        playClipFromPlaylist(currentPlayingPlaylistId, currentPlayingIndex);
+                    }
+                }, 500);
+            } else {
+                player.pauseVideo();
+                showNotification('⏸️ Reproducción pausada - Activa la reproducción automática o usa ⮞', 'success', 2500);
+            }
+            return;
+        }
+        
         if (state !== YT.PlayerState.PLAYING) {
             return;
         }
@@ -1147,6 +1213,7 @@ function stopEverything() {
     currentEditingPlaylistId = null;
     currentEditingClipIndex  = null;
     currentClipProgress = 0; // Resetear progreso guardado
+    userPaused = false; // Limpiar pausa manual
 
     if (playInterval) { 
         clearInterval(playInterval); 
@@ -1514,6 +1581,17 @@ function handleDrop(e) {
     if (!pl) return false;
     const [moved] = pl.clips.splice(draggedClipIndex, 1);
     pl.clips.splice(targetIdx, 0, moved);
+
+    // Si estamos reproduciendo esta playlist, actualizar currentPlayingIndex
+    // para que apunte al clip correcto en el nuevo orden visual
+    if (currentPlayingPlaylistId === draggedPlaylistId && currentPlayingClipId !== null) {
+        const newIndex = pl.clips.findIndex(c => c.clipId === currentPlayingClipId);
+        if (newIndex !== -1) {
+            currentPlayingIndex = newIndex;
+            currentEditingClipIndex = newIndex;
+        }
+    }
+
     saveToLocalStorage();
     renderPlaylists();
 
@@ -1633,9 +1711,9 @@ function initializeIcons() {
     const nextBtn = document.getElementById('nextBtn');
     const autoPlayBtn = document.getElementById('autoPlayBtn');
     
-    if (prevBtn) prevBtn.innerHTML = getIcon('prev', 'icon-lg');
+    if (prevBtn) { prevBtn.innerHTML = getIcon('prev', 'icon-lg'); prevBtn.style.display = 'none'; }
     if (playPauseBtn) playPauseBtn.innerHTML = getIcon('play', 'icon-lg');
-    if (nextBtn) nextBtn.innerHTML = getIcon('next', 'icon-lg');
+    if (nextBtn) { nextBtn.innerHTML = getIcon('next', 'icon-lg'); nextBtn.style.display = 'none'; }
     if (autoPlayBtn) autoPlayBtn.innerHTML = getIcon('autoplayOn', 'icon-lg');
     
     // Botón de agregar playlist
