@@ -719,6 +719,41 @@ button:disabled {
     stroke: var(--triangle-end-stroke);
 }
 
+
+/* ══════════════════════════════════════════════════════════════
+   🎬 PLAYHEAD DE POSICIÓN / PREVISUALIZACIÓN DEL FINAL
+   ══════════════════════════════════════════════════════════════ */
+
+.preview-playhead {
+    position: absolute;
+    top: 50%;
+    width: 12px;
+    height: 12px;
+    transform: translate(-50%, -50%);
+    background: var(--triangle-start-stroke);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9;
+    display: none;
+    box-shadow: 0 0 7px rgba(80, 134, 80, 0.85);
+    will-change: left;
+}
+
+.preview-playhead.active {
+    display: block;
+    animation: playheadAppear 0.2s ease;
+}
+
+@keyframes playheadAppear {
+    from { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
+    to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+[data-theme="dark"] .preview-playhead {
+    background: #6dbf6d;
+    box-shadow: 0 0 9px rgba(109, 191, 109, 0.9);
+}
+
 /* Inputs hidden - mantienen compatibilidad con código existente */
 input[type="range"],
 input[type="hidden"]#startRange,
